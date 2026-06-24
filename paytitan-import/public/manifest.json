@@ -1,0 +1,28 @@
+{
+  "name": "PayTitan",
+  "short_name": "PayTitan",
+  "name_localized": "PayTitan Social Banking",
+  "description": "Your Sleek Financial Hub",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A2130",
+  "theme_color": "#1A2130",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "social"],
+  "shortcuts": [
+    {
+      "name": "Transfer",
+      "short_name": "Send",
+      "url": "/?action=transfer",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    }
+  ]
+}

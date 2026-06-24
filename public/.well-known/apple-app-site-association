@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "79X896W83S.com.paytitan.mobile",
+        "paths": ["/transfer/*", "/pay/*", "/circle/*"]
+      }
+    ]
+  }
+}

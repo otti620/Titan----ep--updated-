@@ -1,0 +1,6 @@
+{
+  "name": "PayTitan",
+  "description": "High-performance social banking core for modern architects.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

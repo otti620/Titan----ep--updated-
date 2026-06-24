@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1A2130" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Offline | PayTitan</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #1A2130;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            background: #FF4D1C;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 30px rgba(255, 77, 28, 0.3);
+        }
+        .logo-img {
+            width: 48px;
+            height: 48px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            letter-spacing: -0.02em;
+        }
+        p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            max-width: 280px;
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+        .offline-stats {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 32px;
+            width: 100%;
+            max-width: 300px;
+            display: none; /* Shown dynamically by JS if data exists */
+        }
+        .offline-stats-title {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .offline-balance {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        .retry-button {
+            background: white;
+            color: #1A2130;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .retry-button:active {
+            transform: scale(0.96);
+        }
+        .shield-badge {
+            position: absolute;
+            bottom: max(40px, env(safe-area-inset-bottom));
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.4;
+        }
+        .shield-text {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="/logo.png" alt="PayTitan" class="logo-img" onerror="this.style.display='none';">
+            <div id="fallback-icon" style="font-size: 36px; line-height: 1; display: none;">⚡</div>
+        </div>
+        
+        <h1>No Connection</h1>
+        <p>Your financial architecture is protected but offline.</p>
+        
+        <div class="offline-stats" id="offlineStats">
+            <div class="offline-stats-title">Last Known Balance</div>
+            <div class="offline-balance" id="offlineBalance">₦0.00</div>
+        </div>
+        
+        <button class="retry-button" onclick="window.location.reload()">Retry Connection</button>
+    </div>
+
+    <div class="shield-badge">
+        <span class="shield-text">TitanShield™ Offline Mode</span>
+    </div>
+
+    <script>
+        // Hide fallback icon if logo loads
+        const img = document.querySelector('.logo-img');
+        img.onerror = () => {
+            img.style.display = 'none';
+            document.getElementById('fallback-icon').style.display = 'block';
+        };
+
+        // Try to fetch cached balance or profile from localStorage
+        try {
+            // Note: Adjust the localStorage key based on how Supabase or your app caches state
+            const cachedWallet = localStorage.getItem('paytitan_wallet_balance');
+            if (cachedWallet) {
+                const balance = parseFloat(cachedWallet);
+                document.getElementById('offlineBalance').innerText = '₦' + balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('offlineStats').style.display = 'block';
+            }
+        } catch (e) {
+            console.log('Error reading cached data', e);
+        }
+    </script>
+</body>
+</html>

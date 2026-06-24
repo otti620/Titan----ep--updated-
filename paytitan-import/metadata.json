@@ -1,0 +1,12 @@
+{
+  "name": "PayTitan",
+  "description": "Next generation security-first banking. Location permissions are used exclusively when displaying nearby agent cash-points on map screens to enforce regional anti-fraud guarantees.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "publickey-credentials-create",
+    "publickey-credentials-get"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
