@@ -10,7 +10,7 @@ const VaultsScreen = ({ onCreate, onSelectVault }: { onCreate: () => void, onSel
   const { vaults } = usePayTitan();
 
   const getIcon = (category: string) => {
-    switch (category.toLowerCase()) {
+    switch ((category || '').toLowerCase()) {
       case 'electronics': return <Smartphone className="text-indigo-500" />;
       case 'life event': return <Heart className="text-green-500" />;
       case 'emergency': return <Umbrella className="text-blue-500" />;

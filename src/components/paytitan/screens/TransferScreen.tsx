@@ -80,8 +80,8 @@ export default function TransferScreen({ onBack, initialHandle }: TransferScreen
 
   // Filter contacts based on handle input
   const filteredContacts = contacts.filter(c => 
-    (c.first_name + ' ' + c.last_name).toLowerCase().includes(handle.toLowerCase()) || 
-    (c.username || '').toLowerCase().includes(handle.toLowerCase())
+    ((c.first_name || '') + ' ' + (c.last_name || '')).toLowerCase().includes((handle || '').toLowerCase()) || 
+    (c.username || '').toLowerCase().includes((handle || '').toLowerCase())
   );
 
   const handleNext = () => {

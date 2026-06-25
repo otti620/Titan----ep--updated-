@@ -67,8 +67,8 @@ const ContactsScreen = ({ onBack, onSelect }: { onBack: () => void, onSelect: (u
   };
 
   const filteredContacts = contacts.filter(c => 
-    (c.first_name + ' ' + c.last_name).toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (c.username || '').toLowerCase().includes(searchQuery.toLowerCase())
+    ((c.first_name || '') + ' ' + (c.last_name || '')).toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+    (c.username || '').toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
   return (

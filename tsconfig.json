@@ -22,5 +22,13 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "paytitan-import",
+    "src/app/api",
+    "src/app/layout.tsx",
+    "src/app/not-found.tsx"
+  ]
 }

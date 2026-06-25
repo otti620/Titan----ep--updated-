@@ -64,8 +64,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   };
 
   const filteredTransactions = transactions.filter(tx => 
-    tx.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    tx.category.toLowerCase().includes(searchQuery.toLowerCase())
+    (tx.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+    (tx.category || '').toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
   if (isLoading) {
