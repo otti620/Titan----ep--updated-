@@ -44,7 +44,6 @@ import MerchantModeScreen from './screens/MerchantModeScreen';
 import RewardsScreen from './screens/RewardsScreen';
 import TitanAIScreen from './screens/TitanAIScreen';
 import TitanNearbyScreen from './screens/TitanNearbyScreen';
-import TitanMiniBridge from './screens/TitanMiniBridge';
 import LegalScreen from './LegalScreen';
 import ActionDrawer from './ActionDrawer';
 import RewardPopup from './RewardPopup';
@@ -235,13 +234,6 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Persistent Titan Mini Bridge */}
-      <AnimatePresence>
-        {!drawerScreen && !isMerchantMode && !showAdmin && (
-          <TitanMiniBridge onOpenFull={() => handleNavigate('titan-ai')} />
-        )}
-      </AnimatePresence>
 
       {/* iOS styled Bottom Tab Bar - Premium Complete Glass */}
       {!showAdmin && (

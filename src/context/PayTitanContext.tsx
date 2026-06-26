@@ -661,7 +661,7 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       return true;
-    } catch (e) {
+      } catch (e) {
       console.error(e);
       // Fallback
       if (userId === session?.user?.id) {
@@ -671,7 +671,7 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         // Push local transaction
         const ref = `DEP-${Math.floor(100000 + Math.random() * 899900)}`;
-        const nextTxs: Transaction[] = [{
+        const nextTx: Transaction = {
           id: ref,
           user_id: userId,
           type: 'in',
@@ -682,9 +682,17 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           status: 'SUCCESS',
           reference: ref,
           created_at: new Date().toISOString()
-        }, ...transactions];
+        };
+        const nextTxs = [nextTx, ...transactions];
         setTransactions(nextTxs);
         localStorage.setItem(getLocalKey('transactions'), JSON.stringify(nextTxs));
+        
+        try {
+          await supabase.from('profiles').update({ balance: nextBal } as any).eq('id', userId);
+          await supabase.from('transactions').insert(nextTx as any);
+        } catch (err) {
+          console.warn("Could not sync to supabase", err);
+        }
       }
       return true;
     }
@@ -713,10 +721,18 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (e: any) {
       console.warn("Transfer API failed, executing frontend ledger fallback", e);
       // Fallback Local simulation
-      const receiver = await getUserByUsername(receiverUsername);
-      if (!receiver) {
-        setIsProcessing(false);
-        return { success: false, message: "Recipient user name not found in PayTitan network" };
+      let receiverTitle = `@${receiverUsername}`;
+      
+      // If it's a 10-digit account number, bypass username check
+      if (/^\d{10}$/.test(receiverUsername)) {
+        receiverTitle = `Account ${receiverUsername}`;
+      } else {
+        const receiver = await getUserByUsername(receiverUsername);
+        if (!receiver) {
+          setIsProcessing(false);
+          return { success: false, message: "Recipient user name not found in PayTitan network" };
+        }
+        receiverTitle = `@${receiver.username}`;
       }
 
       const ref = `TX-${Math.floor(100000 + Math.random() * 899900)}`;
@@ -732,7 +748,7 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         user_id: profile.id,
         type: 'out',
         category: 'Transfer',
-        title: `Transfer to @${receiver.username}`,
+        title: `Transfer to ${receiverTitle}`,
         description: note || 'Instant P2P Transfer',
         amount,
         status: 'SUCCESS',
@@ -743,13 +759,20 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const nextTxs = [outTx, ...transactions];
       setTransactions(nextTxs);
       localStorage.setItem(getLocalKey('transactions'), JSON.stringify(nextTxs));
+      
+      try {
+        await supabase.from('profiles').update({ balance: nextBal } as any).eq('id', profile.id);
+        await supabase.from('transactions').insert(outTx as any);
+      } catch (err) {
+        console.warn("Could not sync to supabase", err);
+      }
 
       // Push a simulated notification
       const mockNotif: Notification = {
         id: `n_tx_${ref}`,
         type: 'success',
         title: 'Transfer Successful',
-        description: `Sent ₦${amount.toLocaleString()} to @${receiver.username}.`,
+        description: `Sent ₦${amount.toLocaleString()} to ${receiverTitle}.`,
         unread: true,
         created_at: new Date().toISOString()
       };
@@ -821,6 +844,13 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const nextTxs = [billTx, ...transactions];
       setTransactions(nextTxs);
       localStorage.setItem(getLocalKey('transactions'), JSON.stringify(nextTxs));
+      
+      try {
+        await supabase.from('profiles').update({ balance: nextBal } as any).eq('id', profile.id);
+        await supabase.from('transactions').insert(billTx as any);
+      } catch (err) {
+        console.warn("Could not sync to supabase", err);
+      }
 
       setIsProcessing(false);
       return { success: true, reference: ref };
@@ -1053,268 +1083,275 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const text = prompt.toLowerCase().trim();
       
-      // 1. Helper to extract money amount
       const parseAmount = (input: string): number | null => {
-        // match phrases like "5k", "5,000", "5000", "2.5k", etc.
         const moneyRegex = /(?:₦|ngn)?\s*(\d+(?:\.\d+)?)\s*(k|thousand|m|million)?/i;
         const match = input.match(moneyRegex);
         if (match) {
           let num = parseFloat(match[1]);
           const suffix = (match[2] || '').toLowerCase();
-          if (suffix === 'k' || suffix === 'thousand') {
-            num *= 1000;
-          } else if (suffix === 'm' || suffix === 'million') {
-            num *= 1000000;
-          }
+          if (suffix === 'k' || suffix === 'thousand') num *= 1000;
+          else if (suffix === 'm' || suffix === 'million') num *= 1000000;
           return num;
         }
-        
-        // backup match looking for raw numbers
         const fallbackMatch = input.match(/\b\d+[,.]?\d*\b/);
-        if (fallbackMatch) {
-          return parseFloat(fallbackMatch[0].replace(/,/g, ''));
-        }
+        if (fallbackMatch) return parseFloat(fallbackMatch[0].replace(/,/g, ''));
         return null;
       };
 
-      // 2. Helper to extract phone number
       const parsePhone = (input: string): string | null => {
         const phoneMatch = input.match(/\b(0\d{10}|234\d{10}|\+234\d{10})\b/);
         return phoneMatch ? phoneMatch[0] : null;
       };
 
-      // 3. Helper to detect Network
-      const parseNetwork = (input: string): string => {
+      const parseNetwork = (input: string): string | null => {
         if (input.includes('mtn')) return 'MTN';
         if (input.includes('airtel')) return 'Airtel';
         if (input.includes('glo') || input.includes('globacom')) return 'Glo';
         if (input.includes('9mobile') || input.includes('etisalat')) return '9mobile';
-        return 'MTN'; // Default
+        return null;
       };
 
-      // 4. Intent Classification Engine (Fully Local Proprietary NLP Heuristics Model)
-      
-      // A. Transfer Intent
-      if (text.includes('transfer') || text.includes('send') || text.includes('pay')) {
-        const amount = parseAmount(text);
-        if (!amount || amount <= 0) {
-          return {
-            success: false,
-            message: "I detected a transfer intent, but couldn't parse the amount. Please specify clearly, e.g., 'Transfer 5000 to @gospel' or 'Send 2k to shade'."
-          };
-        }
+      const parseAccountNo = (input: string): string | null => {
+        const accMatch = input.match(/\b(\d{10})\b/);
+        return accMatch ? accMatch[1] : null;
+      };
 
-        // Try to find a recipient (e.g. "@username" or "to name" or just a name after transfer/send/pay)
-        let recipient = '';
-        const handleMatch = text.match(/@([a-zA-Z0-9_]+)/);
-        if (handleMatch) {
-          recipient = handleMatch[1];
-        } else {
-          // Look for words after "to " or "pay "
-          const toMatch = text.match(/(?:to|pay)\s+([a-zA-Z0-9_]+)/i);
-          if (toMatch && !['my', 'the', 'a', 'an'].includes(toMatch[1])) {
-            recipient = toMatch[1];
+      const parseRecipient = (input: string): string | null => {
+        const handleMatch = input.match(/@([a-zA-Z0-9_]+)/);
+        if (handleMatch) return handleMatch[1];
+        
+        const toMatch = input.match(/(?:to|pay|for)\s+([a-zA-Z0-9_]+)/i);
+        if (toMatch && !['my', 'the', 'a', 'an', 'account', 'electricity', 'dstv', 'gotv', 'nepa', 'bill', 'tv', 'cable', 'airtime', 'data'].includes(toMatch[1])) {
+          return toMatch[1];
+        }
+        
+        const words = input.split(/\s+/);
+        const toIdx = words.indexOf('to');
+        if (toIdx !== -1 && toIdx + 1 < words.length) {
+          const rec = words[toIdx + 1] === 'account' ? (words[toIdx + 2] || '') : words[toIdx + 1];
+          if (rec && !['my', 'the'].includes(rec)) return rec;
+        }
+        return null;
+      };
+
+      // Profile Update Direct Handling
+      if ((text.includes('change') || text.includes('update') || text.includes('set')) && text.includes('name')) {
+        const isUsername = text.includes('username');
+        const regex = isUsername ? /(?:username to)\s+@?([a-zA-Z0-9_]+)/i : /(?:name to)\s+([a-zA-Z]+)/i;
+        const match = text.match(regex);
+        if (match && match[1]) {
+          const newVal = match[1];
+          if (isUsername) {
+            setProfile(prev => prev ? { ...prev, username: newVal } : null);
+            try { supabase.from('profiles').update({ username: newVal } as any).eq('id', profile?.id).then(); } catch(e){}
+            return { success: true, message: `👤 I've successfully updated your username to **@${newVal}**.` };
           } else {
-            // Find any potential recipient in the string
-            const words = text.split(/\s+/);
-            const toIdx = words.indexOf('to');
-            if (toIdx !== -1 && toIdx + 1 < words.length) {
-              recipient = words[toIdx + 1];
-            } else {
-              const payIdx = words.indexOf('pay');
-              if (payIdx !== -1 && payIdx + 1 < words.length) {
-                recipient = words[payIdx + 1];
-              }
-            }
+            setProfile(prev => prev ? { ...prev, first_name: newVal } : null);
+            try { supabase.from('profiles').update({ first_name: newVal } as any).eq('id', profile?.id).then(); } catch(e){}
+            return { success: true, message: `👤 I've successfully updated your first name to **${newVal}**.` };
           }
         }
-
-        // Clean recipient
-        recipient = recipient.replace(/[^a-zA-Z0-9_]/g, '');
-
-        if (!recipient || ['airtime', 'data', 'bill', 'electricity', 'dstv', 'gotv'].includes(recipient)) {
-          return {
-            success: false,
-            message: `I classified a transfer request of ₦${amount.toLocaleString()} but couldn't identify the recipient handle. Use '@username' to make it flawless!`
-          };
-        }
-
-        if (balance < amount) {
-          return {
-            success: false,
-            message: `⚠️ High priority transfer declined: Insufficient balance. You attempted to transfer ₦${amount.toLocaleString()} to @${recipient} but your current balance is ₦${balance.toLocaleString()}.`
-          };
-        }
-
-        return {
-          success: true,
-          message: `Double-checking credentials. Let's authorize your transfer of **₦${amount.toLocaleString()}** to **@${recipient}**.`,
-          pendingTx: {
-            type: 'transfer',
-            amount,
-            recipient,
-            note: 'Smart NLP Automated Transfer'
-          }
-        };
+        return { success: true, message: `What would you like to change your ${isUsername ? 'username' : 'name'} to? (e.g., "Change my ${isUsername ? 'username' : 'name'} to John")` };
       }
 
-      // B. Top-up / Funding Intent
-      if (text.includes('topup') || text.includes('fund') || text.includes('deposit') || text.includes('add money') || text.includes('add cash')) {
-        const amount = parseAmount(text);
-        if (!amount || amount <= 0) {
-          return {
-            success: false,
-            message: "I noticed you want to fund your account, but couldn't parse the amount. Try writing 'fund 5000' or 'deposit 10k'."
-          };
-        }
+      // Extract current entities
+      let amount = parseAmount(text);
+      let phone = parsePhone(text);
+      let network = parseNetwork(text);
+      let accountNo = parseAccountNo(text);
+      let recipient = parseRecipient(text);
 
-        return {
-          success: true,
-          message: `Initializing gateway. Let's authorize a wallet deposit of **₦${amount.toLocaleString()}** with your security code.`,
-          pendingTx: {
-            type: 'topup',
-            amount,
-            recipient: profile?.id || 'guest'
-          }
-        };
+      // Determine intent
+      let intent = '';
+      if (text.includes('transfer') || text.includes('send') || text.includes('pay') || text.includes('give')) intent = 'transfer';
+      else if (text.includes('fund') || text.includes('deposit') || text.includes('topup') || text.includes('top up')) intent = 'topup';
+      else if (text.includes('airtime') || text.includes('recharge')) intent = 'airtime';
+      else if (text.includes('data') || text.includes('bundle')) intent = 'data';
+      else if (text.includes('bill') || text.includes('electricity') || text.includes('dstv') || text.includes('gotv') || text.includes('nepa') || text.includes('tv') || text.includes('cable')) intent = 'bill';
+      else if (text.includes('card') && (text.includes('create') || text.includes('new') || text.includes('get'))) intent = 'create_card';
+      else if (text.includes('card') && (text.includes('freeze') || text.includes('lock') || text.includes('block'))) intent = 'lock_card';
+      else if (text.includes('card') && (text.includes('unlock') || text.includes('unfreeze'))) intent = 'unlock_card';
+      else if (text.includes('vault') || text.includes('save') || text.includes('stash') || text.includes('target')) intent = 'vault';
+      else if (text.includes('balance') || text.includes('how much') || text.includes('wallet status')) intent = 'balance';
+      else if (text.includes('history') || text.includes('recent') || text.includes('transaction')) intent = 'history';
+      else if (text.includes('reward') || text.includes('claim') || text.includes('earn')) intent = 'reward';
+      else if (text.includes('pdf') || text.includes('statement') || text.includes('export')) intent = 'statement';
+
+      const lastTitan = messages && messages.length > 0 ? messages[messages.length - 1] : null;
+      const lastTitanText = lastTitan?.role === 'titan' ? lastTitan.text.toLowerCase() : '';
+
+      // Infer intent from last AI question if not explicitly stated
+      if (!intent) {
+        if (lastTitanText.includes('how much would you like to send') || lastTitanText.includes('who would you like to send')) intent = 'transfer';
+        else if (lastTitanText.includes('how much would you like to fund') || lastTitanText.includes('how much do you want to deposit') || lastTitanText.includes('fund your wallet with')) intent = 'topup';
+        else if (lastTitanText.includes('how much airtime') || lastTitanText.includes('which network') || lastTitanText.includes('what phone number')) intent = 'airtime';
+        else if (lastTitanText.includes('how much data') || lastTitanText.includes('which network is')) intent = 'data';
+        else if (lastTitanText.includes('which bill') || lastTitanText.includes('how much would you like to pay')) intent = 'bill';
+        else if (lastTitanText.includes('how much would you like to stash')) intent = 'vault';
       }
 
-      // C. Airtime VTU Intent
-      if (text.includes('airtime') || text.includes('recharge') || text.includes('credit')) {
-        const amount = parseAmount(text);
-        const phone = parsePhone(text) || "08012345678"; // fallback mock/default phone
-        const network = parseNetwork(text);
-
-        if (!amount || amount <= 0) {
-          return {
-            success: false,
-            message: "Please specify the amount you want to buy, e.g., 'buy MTN airtime 1000' or 'recharge 500 airtime'."
-          };
-        }
-
-        if (balance < amount) {
-          return {
-            success: false,
-            message: `⚠️ Airtime purchase declined. Insufficient balance (₦${balance.toLocaleString()}) for ₦${amount.toLocaleString()} purchase.`
-          };
-        }
-
-        return {
-          success: true,
-          message: `Ready to recharge. Let's authorize the purchase of **₦${amount.toLocaleString()}** **${network}** airtime for **${phone}**.`,
-          pendingTx: {
-            type: 'airtime',
-            amount,
-            recipient: phone,
-            extra: { network, biller: `${network} Airtime VTU`, category: 'Airtime' }
-          }
-        };
+      // Context Recovery
+      const historyText = messages ? messages.slice(-3).map(m => m.text.toLowerCase()).join(' ') : '';
+      if (intent) {
+        if (!amount) amount = parseAmount(historyText);
+        if (!recipient && intent === 'transfer') recipient = parseRecipient(historyText);
+        if (!accountNo && intent === 'transfer') accountNo = parseAccountNo(historyText);
+        if (!network && (intent === 'airtime' || intent === 'data')) network = parseNetwork(historyText);
+        if (!phone && (intent === 'airtime' || intent === 'data')) phone = parsePhone(historyText);
       }
 
-      // D. Mobile Data Bundle Intent
-      if (text.includes('data') || text.includes('bundle') || text.includes('internet')) {
-        const amount = parseAmount(text) || 1000; // default 1GB = 1000
-        const phone = parsePhone(text) || "08012345678";
-        const network = parseNetwork(text);
+      // Intent Handlers
+      switch (intent) {
+        case 'transfer': {
+          let target = accountNo || recipient;
+          if (target && target.length < 3) target = null; // discard noise
+          
+          if (!amount) return { success: true, message: "Sure, I can help with a transfer. How much would you like to send?" };
+          if (!target) return { success: true, message: `Got it, ₦${amount.toLocaleString()}. Who would you like to send this to? You can provide a @username or a 10-digit bank account number.` };
+          
+          if (balance < amount) return { success: false, message: `⚠️ Transfer declined: Insufficient balance. You attempted to transfer ₦${amount.toLocaleString()} but your balance is ₦${balance.toLocaleString()}.` };
 
-        if (balance < amount) {
-          return {
-            success: false,
-            message: `⚠️ Data bundle purchase declined due to insufficient balance.`
-          };
-        }
-
-        return {
-          success: true,
-          message: `Preparing data subscription. Let's authorize **₦${amount.toLocaleString()}** for **${network}** data bundle for **${phone}**.`,
-          pendingTx: {
-            type: 'data',
-            amount,
-            recipient: phone,
-            extra: { network, biller: `${network} Mobile Data bundle`, category: 'Data' }
-          }
-        };
-      }
-
-      // E. Check Balance / Portfolio Intent
-      if (text.includes('balance') || text.includes('how much') || text.includes('check money') || text.includes('wallet status')) {
-        return {
-          success: true,
-          message: `📊 [PROPRIETARY NLP ENGINE - ACCOUNT QUERY]\n\nHere is your real-time PayTitan standing:\n\n• **Wallet Balance**: ₦${balance.toLocaleString()}\n• **Tribe Circles**: ${circles.length} Active\n• **Daily Yield**: ₦${(balance * 0.05).toLocaleString(undefined, { maximumFractionDigits: 0 })}\n• **Active Cards**: ${cards.length} Active\n• **KYC Level**: Level ${profile?.kyc_level || 1} (${profile?.kyc_status || 'verified'})`
-        };
-      }
-
-      // F. Check Recent Transactions / History Intent
-      if (text.includes('history') || text.includes('recent') || text.includes('transaction') || text.includes('log') || text.includes('statement')) {
-        if (transactions.length === 0) {
+          const isBank = !!accountNo;
           return {
             success: true,
-            message: "📋 Your transactional ledger is currently empty. Fund your wallet or make a transfer to view automated ledger entries!"
+            message: `Double-checking credentials. Let's authorize your transfer of **₦${amount.toLocaleString()}** to **${isBank ? 'Account ' + target : '@' + target}**.`,
+            pendingTx: { type: 'transfer', amount, recipient: target, note: isBank ? 'Smart AI Bank Transfer' : 'Smart AI Automated Transfer' }
           };
         }
 
-        const latest = transactions.slice(0, 3).map(t => {
-          const typeSign = (t.type === 'in' || t.type === 'receive') ? '₦+' : '₦-';
-          const indicator = (t.type === 'in' || t.type === 'receive') ? '🟩' : '🟥';
-          return `${indicator} **${t.title}** (${t.category})\n  *${typeSign}${t.amount.toLocaleString()} | ${t.status}*`;
-        }).join('\n\n');
-
-        return {
-          success: true,
-          message: `📋 [PROPRIETARY NLP ENGINE - LEDGER HISTORY]\n\nDisplaying your 3 most recent secure operations:\n\n${latest}\n\nType 'pdf statement' to export a signature-signed secure statement.`
-        };
-      }
-
-      // G. Claim Reward Intent
-      if (text.includes('reward') || text.includes('claim') || text.includes('earn')) {
-        const res = await claimDailyReward();
-        if (res.success) {
+        case 'topup': {
+          if (!amount) return { success: true, message: "How much would you like to fund your wallet with?" };
           return {
             success: true,
-            message: `🎁 [PROPRIETARY NLP ENGINE]\n\nDaily yield successfully gathered! **₦1,000** has been credited to your active wallet balance.\n\nNew Wallet Balance: **₦${(balance + 1000).toLocaleString()}**`
+            message: `Initializing gateway. Let's authorize a wallet deposit of **₦${amount.toLocaleString()}** with your security PIN.`,
+            pendingTx: { type: 'topup', amount, recipient: profile?.id || 'guest' }
           };
-        } else {
+        }
+
+        case 'airtime': {
+          if (!amount) return { success: true, message: "How much airtime would you like to buy?" };
+          if (!phone) return { success: true, message: `₦${amount.toLocaleString()} airtime. What phone number should I recharge?` };
+          if (!network) return { success: true, message: `Okay, for ${phone}. Which network? (MTN, Airtel, Glo, or 9mobile)` };
+          
+          if (balance < amount) return { success: false, message: `⚠️ Airtime purchase declined: Insufficient balance.` };
           return {
             success: true,
-            message: "🎁 Daily yield has already been gathered for this current 24-hour cycle. Please return tomorrow to compound more rewards!"
+            message: `Ready to recharge. Let's authorize **₦${amount.toLocaleString()}** **${network}** airtime for **${phone}**.`,
+            pendingTx: { type: 'airtime', amount, recipient: phone, extra: { network, biller: `${network} Airtime VTU`, category: 'Airtime' } }
+          };
+        }
+
+        case 'data': {
+          if (!amount) amount = 1000; // default assumption for simplicity if they just say "buy data for 081..."
+          if (!phone) return { success: true, message: `What phone number should I buy data for?` };
+          if (!network) return { success: true, message: `Which network is ${phone} on?` };
+          
+          if (balance < amount) return { success: false, message: `⚠️ Data purchase declined: Insufficient balance.` };
+          return {
+            success: true,
+            message: `Preparing data subscription. Let's authorize **₦${amount.toLocaleString()}** for **${network}** data bundle for **${phone}**.`,
+            pendingTx: { type: 'data', amount, recipient: phone, extra: { network, biller: `${network} Mobile Data bundle`, category: 'Data' } }
+          };
+        }
+
+        case 'bill': {
+          let biller = '';
+          let cat = 'Bills';
+          const fullText = (historyText + ' ' + text).toLowerCase();
+          if (fullText.includes('dstv')) { biller = 'DSTV Subscription'; cat = 'Cable TV'; }
+          else if (fullText.includes('gotv')) { biller = 'GOTV Subscription'; cat = 'Cable TV'; }
+          else if (fullText.includes('startimes')) { biller = 'StarTimes'; cat = 'Cable TV'; }
+          else if (fullText.includes('electricity') || fullText.includes('nepa')) { biller = 'Prepaid Electricity'; cat = 'Electricity'; }
+          
+          if (!biller) return { success: true, message: "Which bill would you like to pay? (e.g., DSTV, GOTV, Electricity)" };
+          if (!amount) return { success: true, message: `How much would you like to pay for ${biller}?` };
+          
+          if (balance < amount) return { success: false, message: `⚠️ Bill payment declined: Insufficient balance.` };
+          return {
+            success: true,
+            message: `Preparing bill payment. Let's authorize **₦${amount.toLocaleString()}** for **${biller}**.`,
+            pendingTx: { type: 'data', amount, recipient: profile?.id || 'guest', extra: { network: biller, biller, category: cat } }
+          };
+        }
+
+        case 'create_card': {
+          if (createCard) {
+            const res = await createCard();
+            if (res) return { success: true, message: `💳 Your new PayTitan Virtual USD Card has been successfully generated and activated for global spending!` };
+          }
+          return { success: false, message: "Failed to generate your virtual card. Please try again later." };
+        }
+
+        case 'lock_card': {
+          if (!cards || cards.length === 0 || !toggleCardLock) return { success: false, message: "You do not currently have any active cards to freeze." };
+          const res = await toggleCardLock(cards[0].id);
+          if (res) return { success: true, message: `🔒 I have instantly frozen your virtual card (*${cards[0].last4}). It can no longer be charged. Type 'unlock card' to reverse this.` };
+          return { success: false, message: "Failed to lock card." };
+        }
+
+        case 'unlock_card': {
+          if (!cards || cards.length === 0 || !toggleCardLock) return { success: false, message: "You do not currently have any active cards." };
+          const res = await toggleCardLock(cards[0].id);
+          if (res) return { success: true, message: `🔓 I have unfrozen your virtual card (*${cards[0].last4}). It is now ready for transactions.` };
+          return { success: false, message: "Failed to unlock card." };
+        }
+
+        case 'vault': {
+          if (!amount) return { success: true, message: "How much would you like to stash in a vault?" };
+          if (balance < amount) return { success: false, message: "You don't have enough balance to stash that amount into a vault." };
+          
+          const res = await createVault(`AI Auto-Stash`, amount, 'General Savings', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
+          if (res) {
+            await fundUserWallet(profile?.id || 'guest', -amount);
+            return { success: true, message: `🏦 I have securely stashed **₦${amount.toLocaleString()}** into a new Smart Vault for you. It's now earning yield!` };
+          }
+          return { success: false, message: "Failed to create vault." };
+        }
+
+        case 'balance': {
+          return { success: true, message: `Your current Wallet Balance is **₦${balance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}**.` };
+        }
+
+        case 'history': {
+          if (transactions.length === 0) return { success: true, message: "You have no recent transactions on your ledger." };
+          const recent = transactions.slice(0, 3);
+          let txMsg = `Here are your most recent transactions:\n\n`;
+          recent.forEach(t => {
+            const sym = t.type === 'in' ? '+' : '-';
+            txMsg += `• **${t.title}**: ${sym}₦${t.amount.toLocaleString()}\n`;
+          });
+          return { success: true, message: txMsg };
+        }
+
+        case 'reward': {
+          if (!claimDailyReward) return { success: false, message: "Reward service unavailable." };
+          const res = await claimDailyReward();
+          if (res.success) return { success: true, message: `🎁 You've successfully claimed your daily yield check-in reward! The funds have been added to your wallet.` };
+          return { success: false, message: "You have already claimed your reward recently." };
+        }
+
+        case 'statement': {
+          generateHistoryPDF('Smart AI Request');
+          return { success: true, message: `📄 Your account statement PDF is being generated securely and will download momentarily.` };
+        }
+
+        default: {
+          if (text.includes('hello') || text.includes('hi ') || text.includes('hey')) {
+            return { success: true, message: `Hello @${profile?.username || 'user'}! 👋\n\nI am Titan Smart Core. I can guide you through transfers, bill payments, and profile updates. Just let me know what you want to do!` };
+          }
+          if (text.includes('help') || text.includes('commands') || text.includes('what can you do')) {
+            return { success: true, message: `🛠️ **Titan Smart Core Command Suite**\n\n1. **Transfers**: 'Send 3k' or 'Transfer money'\n2. **Wallet Topup**: 'Fund wallet'\n3. **Bills & Airtime**: 'Buy airtime' or 'Pay electricity'\n4. **Cards**: 'Create a new card' or 'Freeze my card'\n5. **Savings**: 'Stash 50k in a vault'\n6. **Ledger**: 'Show my balance'` };
+          }
+          
+          return {
+            success: true,
+            message: `I didn't quite catch that. I am Titan Smart Core, your financial assistant. I can help you send money, pay bills, buy airtime, and update your profile.\n\nWhat would you like to do?`
           };
         }
       }
-
-      // H. System-signed Statement Intent
-      if (text.includes('pdf') || text.includes('statement') || text.includes('export')) {
-        generateHistoryPDF('Smart AI Request');
-        return {
-          success: true,
-          message: "📄 [PROPRIETARY NLP ENGINE]\n\n**PDF statement successfully initiated!** I have structured, compiled, and signed your digital balance ledger. The PDF should now be downloading to your browser."
-        };
-      }
-
-      // 5. Intelligent proprietary expert system fallback (if no action intent matches)
-      const lowercasePrompt = text;
-      let replyMessage = "I am Titan Smart Core, your offline proprietary financial intelligence engine. I can automatically execute transactions when you type instructions. Here's what you can do right now:\n\n";
-      replyMessage += `• "Send 2,500 to @gospel"\n• "Fund my wallet with 5,000"\n• "Buy MTN airtime 1500 for 08123456789"\n• "Show my recent transactions"\n• "What is my account balance?"\n\n`;
-
-      if (lowercasePrompt.includes('hello') || lowercasePrompt.includes('hi ') || lowercasePrompt.includes('hey')) {
-        replyMessage = `Hello @${profile?.username || 'user'}! 👋\n\nI am Titan Smart Core, a proprietary local NLP assistant. I can immediately execute operations on your wallet with ultra-high security. No third-party APIs or latency delays.\n\nTry telling me: **"Transfer 2000 to @shade"** or **"Fund my wallet with 5000"**!`;
-      } else if (lowercasePrompt.includes('help') || lowercasePrompt.includes('commands') || lowercasePrompt.includes('what can you do')) {
-        replyMessage = `🛠️ **Titan Smart Core Command Suite**\n\nOur client-side NLP ML engine handles these transactions in real-time:\n\n1. **Send Money**: 'Send 3k to @username'\n2. **Wallet Topup**: 'Fund wallet with 10000'\n3. **Airtime / Data**: 'Buy MTN airtime 1000 for 09012345678'\n4. **Audit Ledger**: 'Show my recent transactions' or 'Check my balance'\n5. **Claim Yield**: 'Claim reward'\n6. **Export Documents**: 'Export PDF statement'`;
-      } else {
-        // Fallback: If online, we can optionally use Gemini, but to be completely safe and highly reliable offline without reliance on any API, we use our local banking heuristic engine! Let's explain nicely.
-        replyMessage = `🤖 **Titan Smart Core Intelligent Agent**\n\nI processed your prompt: *"${prompt}"* using our local heuristic intent classifier.\n\nTo make a payment or query your ledger immediately, please use direct instruction tags like:\n• **"Send 5000 to @username"**\n• **"Topup 10k"**\n• **"Buy airtime 500 for 08033123456"**\n• **"Show my balance"**`;
-      }
-
-      return {
-        success: true,
-        message: replyMessage
-      };
-
-    } catch (e: any) {
-      console.error(e);
-      return {
-        success: false,
-        message: "TitanAI local node error. Please check state."
-      };
+    } catch (error) {
+      console.error(error);
+      return { success: false, message: "My heuristic engine encountered an error processing your request." };
     }
   };
 

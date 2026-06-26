@@ -19,18 +19,10 @@ export default function AppLockScreen({ onUnlock }: { onUnlock: () => void }) {
   const targetPin = profile?.pin || '1234'; // fallback if not set
 
   useEffect(() => {
-    // Check if biometric is supported and NOT in a restricted iframe
+    // Check if biometric is supported
     if (typeof window !== 'undefined' && window.PublicKeyCredential) {
       if (navigator.credentials) {
         setShowBiometricBtn(true);
-        // Automatically prompt biometric when mounted
-        const trigger = async () => {
-          await new Promise(r => setTimeout(r, 800));
-          setBiometricPending(true);
-          await new Promise(r => setTimeout(r, 1200));
-          handleBiometric();
-        };
-        trigger();
       }
     }
   }, []);
