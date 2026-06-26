@@ -288,7 +288,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
              <ShortcutItem 
                 label="Data" 
                 icon={<Rss className="text-foreground" />} 
-                onClick={() => onNavigate('airtime')} 
+                onClick={() => onNavigate('data')} 
                 animateType="pulse"
                 badge="HOT"
              />
@@ -305,48 +305,20 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
                 animateType="roll"
                 badge="HOT"
              />
-             <ShortcutItem 
-                label="Electric" 
-                icon={<Zap className="text-foreground" />} 
-                onClick={() => onNavigate('electricity')} 
-                animateType="bounce"
-             />
           </div>
         )}
 
         {/* Insights & Growth Bento Hub */}
         {!isMerchantMode && (
           <div className="space-y-3">
-            <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-[0.06em] px-3">Wealth Discovery</h3>
+            <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-[0.06em] px-3">Account Standing</h3>
             
             <div className="grid grid-cols-2 gap-3">
-              {/* Wealth Card - Spans 2 cols */}
-              <motion.div 
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onNavigate('savings')}
-                className="col-span-2 bg-[#1C1C1E] dark:bg-[#1A1A1C] p-5 rounded-[14px] shadow-sm relative overflow-hidden group ios-ease transition-transform duration-200"
-              >
-                <div className="relative z-10 flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <p className="text-white/60 text-[13px] font-medium">Private Reserves</p>
-                      <h3 className="title-2 text-white tabular-nums">₦{totalVaultBalance.toLocaleString()}</h3>
-                    </div>
-                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white">
-                       <PiggyBank size={20} strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-400 font-medium text-[13px]">
-                    <TrendingUp size={14} strokeWidth={2} /> Wealth Growth: +₦{dailyYield.toLocaleString()}
-                  </div>
-                </div>
-              </motion.div>
-
               {/* Success Score widget */}
               <motion.div 
                  whileTap={{ scale: 0.97 }}
                  onClick={() => onNavigate('kyc')}
-                 className="ios-list-group p-4 flex flex-col gap-2 ios-ease transition-transform duration-200"
+                 className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[22px] p-4 text-foreground shadow-sm flex flex-col gap-2 ios-ease transition-transform duration-200"
               >
                  <div className="flex justify-between items-center">
                     <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
@@ -363,7 +335,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
               {/* Rewards / Daily Earn */}
               <motion.div 
                 whileTap={{ scale: 0.97 }}
-                className="ios-list-group p-4 flex flex-col gap-2 ios-ease transition-transform duration-200"
+                onClick={() => onNavigate('rewards')}
+                className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[22px] p-4 text-foreground shadow-sm flex flex-col gap-2 ios-ease transition-transform duration-200"
               >
                  <div className="flex justify-between items-center">
                     <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -372,8 +345,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
                     <span className="text-[17px] font-semibold text-foreground">₦{dailyYield}</span>
                  </div>
                  <div>
-                    <p className="text-[12px] font-medium text-muted-foreground">Daily Yield</p>
-                    <p className="text-[13px] text-foreground font-semibold mt-0.5">{dailyYield > 0 ? 'Accumulating' : 'Start Saving'}</p>
+                    <p className="text-[12px] font-medium text-muted-foreground">Daily Reward</p>
+                    <p className="text-[13px] text-foreground font-semibold mt-0.5">{dailyYield > 0 ? 'Active' : 'Claim Now'}</p>
                  </div>
               </motion.div>
             </div>
@@ -393,7 +366,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
               </button>
             </div>
             
-            <div className="ios-list-group p-0">
+            <div className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[28px] overflow-hidden shadow-sm">
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.slice(0, 4).map((tx, idx) => (
                     <button key={tx.id} onClick={() => onNavigate(`tx-${tx.id}`)} className={cn("flex w-full items-center justify-between p-3 active:bg-black/5 dark:active:bg-white/5 transition-colors", (idx !== filteredTransactions.slice(0, 4).length - 1) && "ios-hairline-bottom")}>
@@ -424,7 +397,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
                   <EmptyState 
                     icon={Clock}
                     title="Immutable Ledger"
-                    description="Your financial journey starts now. Fund your wallet to begin architecting wealth."
+                    description="Your financial journey starts now. Fund your wallet to start making secure instant payments."
                     actionLabel="Fund Wallet"
                     onAction={() => onNavigate('topup')}
                   />
@@ -459,10 +432,10 @@ const CardAction = ({ icon, label, onClick }: { icon: React.ReactNode, label: st
     onClick={() => { hapticFeedback('medium'); onClick(); }}
     className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform duration-200 ios-spring w-full group"
   >
-    <div className="w-[60px] h-[60px] rounded-[18px] bg-black/5 dark:bg-white/10 flex items-center justify-center text-foreground transition-colors group-active:bg-black/10 dark:group-active:bg-white/20">
-      {React.cloneElement(icon as React.ReactElement<{ size?: number, strokeWidth?: number }>, { size: 26, strokeWidth: 1.5 })}
+    <div className="w-[60px] h-[60px] rounded-[18px] bg-white/30 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 flex items-center justify-center text-foreground shadow-sm transition-all group-active:scale-90 group-active:bg-white/40 dark:group-active:bg-white/10">
+      {React.cloneElement(icon as React.ReactElement<{ size?: number, strokeWidth?: number }>, { size: 26, strokeWidth: 2.2 })}
     </div>
-    <span className="caption-1 font-medium text-foreground">{label}</span>
+    <span className="caption-1 font-bold text-foreground text-center tracking-wide">{label}</span>
   </button>
 );
 
@@ -519,8 +492,8 @@ const ShortcutItem = ({
       <motion.div 
         {...motionProps}
         className={cn(
-          "w-[60px] h-[60px] rounded-[18px] bg-card border flex items-center justify-center shadow-sm relative overflow-hidden transition-all duration-300",
-          badge === 'HOT' ? "border-red-500/20" : "border-border group-hover:border-indigo-500"
+          "w-[60px] h-[60px] rounded-[18px] bg-white/30 dark:bg-white/5 backdrop-blur-md border flex items-center justify-center shadow-sm relative overflow-hidden transition-all duration-300",
+          badge === 'HOT' ? "border-red-500/30" : "border-white/40 dark:border-white/10 group-hover:border-indigo-500/50"
         )}
       >
         {React.cloneElement(icon as React.ReactElement<{ size?: number, strokeWidth?: number }>, { size: 24, strokeWidth: 1.5 })}

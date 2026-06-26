@@ -46,8 +46,8 @@ export default function ActionDrawer({ isOpen, onClose, children, title, fullScr
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 26, stiffness: 300, mass: 0.8 }}
             className={cn(
-              "fixed bottom-0 inset-x-0 z-[101] flex flex-col overflow-hidden ios-glass",
-              fullScreen ? "h-[100dvh]" : "max-h-[92dvh] rounded-t-[22px]"
+              "fixed bottom-0 inset-x-0 z-[101] flex flex-col overflow-hidden bg-white/40 dark:bg-black/50 backdrop-blur-3xl border-t border-x border-white/40 dark:border-white/10 shadow-[0_-12px_40px_rgba(0,0,0,0.15)]",
+              fullScreen ? "h-[100dvh]" : "max-h-[92dvh] rounded-t-[32px] p-2"
             )}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >

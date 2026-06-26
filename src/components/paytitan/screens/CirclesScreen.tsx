@@ -28,7 +28,7 @@ const CirclesScreen = ({ onCreate, onJoin, onSelectCircle }: { onCreate: () => v
         </div>
 
         {circles.length > 0 ? (
-          <div className="ios-list-group px-0 space-y-0">
+          <div className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[28px] overflow-hidden">
             {circles.map((circle, index) => (
               <button 
                 key={circle.id}
@@ -89,9 +89,9 @@ const CirclesScreen = ({ onCreate, onJoin, onSelectCircle }: { onCreate: () => v
       </div>
 
       {/* Marketing Section */}
-      <div className="bg-emerald-500/10 rounded-[28px] p-5 shadow-sm relative overflow-hidden mx-1">
+      <div className="bg-emerald-500/10 dark:bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/20 dark:border-emerald-500/10 rounded-[28px] p-5 shadow-sm relative overflow-hidden mx-1">
         <div className="relative z-10 flex items-center gap-4">
-          <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0 border border-emerald-500/20">
             <ShieldCheck className="text-emerald-600 dark:text-emerald-400" size={20} strokeWidth={2} />
           </div>
           <div>

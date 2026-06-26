@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { hapticFeedback, cn } from '../../../lib/utils';
 import { usePayTitan } from '../../../context/PayTitanContext';
+import { toast } from 'sonner';
 
 interface PaymentsScreenProps {
   onBack: () => void;
@@ -77,12 +78,17 @@ const PaymentsScreen = ({ onBack, onNavigate }: PaymentsScreenProps) => {
           {/* Payment Section */}
           <div className="space-y-4">
             <h3 className="footnote text-muted-foreground uppercase tracking-widest pl-1">Payment</h3>
-            <div className="ios-list-group p-5">
+            <div className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[28px] p-5 text-foreground shadow-sm">
               <div className="grid grid-cols-4 gap-y-6 gap-x-2">
                 <GridItem icon={<Send className="text-blue-500" />} label="Transfer" onClick={() => onNavigate('bank-transfer')} />
                 <GridItem icon={<Users2 className="text-pink-500" />} label="Contacts" onClick={() => onNavigate('contacts')} />
                 <GridItem icon={<Wallet className="text-orange-500" />} label="Wallets" onClick={() => onNavigate('topup')} />
-                <GridItem icon={<RefreshCw className="text-yellow-500" />} label="Convert" onClick={() => {}} />
+                <GridItem icon={<RefreshCw className="text-yellow-500" />} label="Convert" onClick={() => {
+                  hapticFeedback('medium');
+                  toast.info("Convert & Swap Under Review", {
+                    description: "Multi-currency swap is currently undergoing FX regulatory clearance with our BaaS partner."
+                  });
+                }} />
                 <GridItem icon={<HandCoins className="text-emerald-500" />} label="Request" onClick={() => onNavigate('request-money')} />
                 
                 <GridItem icon={<AtSign className="text-blue-400" />} label="Pay Tag" onClick={() => onNavigate('transfer')} />
@@ -92,7 +98,12 @@ const PaymentsScreen = ({ onBack, onNavigate }: PaymentsScreenProps) => {
                 
                 <GridItem icon={<Calendar className="text-slate-500" />} label="History" onClick={() => onNavigate('history')} />
                 <GridItem icon={<Sparkles className="text-indigo-500" />} label="OTC Nearby" onClick={() => onNavigate('titan-nearby')} />
-                <GridItem icon={<FileCheck className="text-emerald-600" />} label="Invoice" onClick={() => {}} />
+                <GridItem icon={<FileCheck className="text-emerald-600" />} label="Invoice" onClick={() => {
+                  hapticFeedback('medium');
+                  toast.info("Invoice System Coming Soon", {
+                    description: "Merchant invoicing rails are undergoing corporate compliance underwriting and will launch soon."
+                  });
+                }} />
                 <GridItem icon={<Megaphone className="text-red-500" />} label="Referral" onClick={() => onNavigate('referral')} />
               </div>
             </div>
@@ -103,7 +114,12 @@ const PaymentsScreen = ({ onBack, onNavigate }: PaymentsScreenProps) => {
             <h3 className="footnote text-muted-foreground uppercase tracking-widest pl-1">Others</h3>
             <div className="flex gap-3">
               <div className="w-1/4">
-                <GridItem standalone icon={<Link2 className="text-blue-500" />} label="BioHub" onClick={() => {}} />
+                <GridItem standalone icon={<Link2 className="text-blue-500" />} label="BioHub" onClick={() => {
+                  hapticFeedback('medium');
+                  toast.info("BioHub Identity Coming Soon", {
+                    description: "Decentralized digital profile verification is pending technical partner clearance."
+                  });
+                }} />
               </div>
               <div className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[22px] p-5 flex items-center justify-between relative overflow-hidden shadow-sm active:scale-[0.97] transition-transform ios-spring">
                 <div className="relative z-10">
@@ -147,12 +163,12 @@ const GridItem = ({ icon, label, onClick, standalone = false }: { icon: React.Re
     className="flex flex-col items-center gap-2 group mx-auto"
   >
     <div className={cn(
-      "w-[60px] h-[60px] bg-black/5 dark:bg-white/10 flex items-center justify-center group-active:scale-90 transition-transform ios-spring",
-      standalone ? "rounded-[22px] shadow-sm" : "rounded-[18px]"
+      "w-[60px] h-[60px] bg-white/30 dark:bg-white/5 backdrop-blur-md border border-white/40 dark:border-white/10 flex items-center justify-center group-active:scale-90 transition-transform ios-spring",
+      standalone ? "rounded-[22px] shadow-sm bg-white/40 dark:bg-white/10" : "rounded-[18px]"
     )}>
       {React.cloneElement(icon as React.ReactElement<{ size?: number, strokeWidth?: number }>, { size: 24, strokeWidth: 1.5 })}
     </div>
-    <span className="caption-1 text-foreground text-center">
+    <span className="caption-1 text-foreground text-center font-semibold">
       {label}
     </span>
   </button>

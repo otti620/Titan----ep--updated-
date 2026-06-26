@@ -1,221 +1,193 @@
 "use client";
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, LayoutDashboard, Share2, Plus, ArrowUpRight, 
-  TrendingUp, Users, FileText, QrCode, Building2, 
-  ChevronRight, Download, Link2, Sparkles, Send, Receipt, AtSign
+  ArrowLeft, Building2, ShieldCheck, ClipboardCheck, 
+  Sparkles, AtSign, Globe, CheckCircle2, FileText, Send
 } from 'lucide-react';
 import { usePayTitan } from '../../../context/PayTitanContext';
-import { hapticFeedback, cn } from '../../../lib/utils';
+import { hapticFeedback } from '../../../lib/utils';
 import { toast } from 'sonner';
 
 const MerchantModeScreen = ({ onBack }: { onBack: () => void }) => {
-  const [showQR, setShowQR] = useState(false);
-  const { profile, balance, toggleMerchantMode } = usePayTitan();
+  const { profile, toggleMerchantMode } = usePayTitan();
+  const [businessName, setBusinessName] = useState('');
+  const [businessType, setBusinessType] = useState('retail');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const businessName = `${profile?.first_name}'s Architect Store`;
+  const businessNamePlaceholder = profile?.first_name 
+    ? `${profile.first_name}'s Enterprise` 
+    : "Your Business Name";
 
-  const storeSales = [
-    { id: 1, customer: "Folake", amount: 4500, time: "2m ago", status: "Paid" },
-    { id: 2, customer: "Tunde Titan", amount: 12000, time: "1h ago", status: "Paid" },
-    { id: 3, customer: "Emeka", amount: 2500, time: "3h ago", status: "Pending" },
-  ];
-
-  const handleShareStore = () => {
+  const handleSubmitWaitlist = (e: React.FormEvent) => {
+    e.preventDefault();
     hapticFeedback('medium');
-    setShowQR(true);
+    
+    const finalBusinessName = businessName.trim() || businessNamePlaceholder;
+    setIsSubmitting(true);
+    
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      hapticFeedback('success');
+      toast.success("Merchant pre-registration received successfully!", {
+        description: "Your business is now queued for regulatory review."
+      });
+    }, 1200);
   };
 
   return (
-    <div className="h-full w-full bg-[#F8F9FC] dark:bg-[#000000] flex flex-col relative">
-      {/* Merchant Header */}
-      <div className="px-8 pt-8 pb-4 flex justify-between items-center bg-white dark:bg-black/50 backdrop-blur-md sticky top-0 z-30 border-b border-gray-100 dark:border-white/5">
-        <button onClick={onBack} className="w-10 h-10 bg-white dark:bg-white/5 rounded-full flex items-center justify-center shadow-sm border border-gray-50 dark:border-white/5">
-          <ArrowLeft className="w-5 h-5 text-[#1A2130] dark:text-white" />
+    <div className="h-full w-full bg-[#F8F9FC] dark:bg-[#08080C] flex flex-col relative overflow-hidden">
+      {/* Background radial gradient decoration */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 dark:bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+      {/* Header */}
+      <div className="px-6 pt-6 pb-4 flex justify-between items-center bg-white dark:bg-black/40 backdrop-blur-md sticky top-0 z-30 border-b border-gray-100 dark:border-white/5">
+        <button onClick={onBack} className="w-10 h-10 bg-white dark:bg-white/5 rounded-full flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/5 active:scale-95 transition-all">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex flex-col items-center">
-          <span className="text-[10px] font-black tracking-widest text-[#FF4D1C] uppercase italic">MERCHANT CORE</span>
-          <span className="text-lg font-bold text-[#1A2130] dark:text-white">{businessName}</span>
+          <span className="text-[10px] font-black tracking-widest text-indigo-500 uppercase italic">BUSINESS HUB</span>
+          <span className="text-base font-bold text-foreground">Merchant Settlement</span>
         </div>
-        <button onClick={toggleMerchantMode} className="w-10 h-10 bg-[#FF4D1C]/10 text-[#FF4D1C] rounded-full flex items-center justify-center border border-[#FF4D1C]/20">
+        <button onClick={toggleMerchantMode} className="w-10 h-10 bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center border border-indigo-500/20 active:scale-95 transition-all">
           <AtSign size={18} />
         </button>
       </div>
 
-      <div className="flex-1 px-8 space-y-6 overflow-y-auto pb-32 no-scrollbar pt-4">
-        {/* Business Stats - Shrunk */}
-        <div className="bg-[#1A2130] p-6 rounded-[32px] shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[#FF4D1C] opacity-20 blur-[50px] rounded-full -mr-8 -mt-8" />
-          
-          <div className="relative z-10 space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-0.5">STORE REVENUE</p>
-                <h3 className="text-2xl font-bold text-white tracking-tighter">₦{balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
-              </div>
-              <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
-                <TrendingUp className="text-[#FF4D1C]" size={20} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <StatItem label="Week Sales" value="₦45,000" />
-              <StatItem label="Invoices" value="12" />
-            </div>
+      <div className="flex-1 px-6 space-y-6 overflow-y-auto pb-32 pt-4 no-scrollbar">
+        {/* Compliance Status Badge */}
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3">
+          <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">Regulatory Underwriting Pending</p>
+            <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed font-medium">
+              We are finalizing our corporate onboarding integration with our Banking-as-a-Service (BaaS) and primary license partners. Business accounts will be available immediately upon final regulatory clearance.
+            </p>
           </div>
         </div>
 
-        {/* Compact Account Section */}
-        <div className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-[24px] p-3 flex flex-col gap-1.5 shadow-sm">
-           <div className="flex justify-between items-center">
-              <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Titan Settlement</span>
-              <span className="text-[10px] font-bold text-[#1A2130] dark:text-white uppercase">Vault Ledger</span>
-           </div>
-           <div className="flex justify-between items-center">
-              <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Account ID</span>
-              <span className="text-[12px] font-mono font-bold text-[#FF4D1C] tracking-widest">
-                {profile?.bvn ? `824${profile.bvn.slice(-7)}` : '8237492104'}
-              </span>
-           </div>
-           <div className="flex justify-between items-center">
-              <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Label</span>
-              <span className="text-[10px] font-bold text-[#1A2130] dark:text-white uppercase truncate ml-4">
-                {businessName}
-              </span>
-           </div>
-        </div>
-
-        {/* QR Overlay */}
-        <AnimatePresence>
-          {showQR && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/60 backdrop-blur-md"
-              onClick={() => setShowQR(false)}
-            >
-              <div 
-                className="bg-white dark:bg-[#1C1C1E] p-8 rounded-[40px] shadow-2xl max-w-sm w-full text-center space-y-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-[#1A2130] dark:text-white italic">Store POS QR</h3>
-                  <button onClick={() => setShowQR(false)} className="text-gray-400 hover:text-red-500"><Plus className="rotate-45" /></button>
-                </div>
-                <div className="bg-white p-6 rounded-3xl shadow-inner inline-block mx-auto border-4 border-[#FF4D1C]/20">
-                  <QrCode size={180} className="text-[#1A2130]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-[#1A2130] dark:text-white uppercase tracking-widest">{businessName}</p>
-                  <p className="text-[10px] text-gray-400 font-bold mt-1">SCAN TO SETTLE INVOICE</p>
-                </div>
-                <button 
-                  onClick={() => { hapticFeedback('success'); toast.success('QR Code saved to gallery'); setShowQR(false); }}
-                  className="w-full bg-[#FF4D1C] py-4 rounded-2xl text-white font-bold text-sm shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
-                >
-                  Download Store QR
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Store QR & Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
-           <MerchantAction 
-              icon={<QrCode size={24} />} 
-              label="Store QR" 
-              color="bg-blue-500" 
-              onClick={handleShareStore} 
-           />
-           <MerchantAction 
-              icon={<Link2 size={24} />} 
-              label="Pay Link" 
-              color="bg-[#FF4D1C]" 
-              onClick={() => toast.success('Payment link copied to clipboard!')} 
-           />
-        </div>
-
-        {/* Sales Activity */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest italic">RECENT SALES</h3>
-            <span className="text-[10px] font-bold text-[#FF4D1C] uppercase tracking-widest">Live Loop</span>
+        {/* Hero Section */}
+        <div className="text-center py-6 space-y-2">
+          <div className="w-16 h-16 bg-indigo-500/10 rounded-[22px] flex items-center justify-center text-indigo-500 mx-auto">
+            <Building2 size={32} />
           </div>
-
-          <div className="space-y-3">
-            {storeSales.map((sale) => (
-              <div key={sale.id} className="bg-white dark:bg-white/5 p-5 rounded-[32px] border border-gray-50 dark:border-white/5 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center">
-                    <img 
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${sale.customer}`} 
-                      className="w-full h-full rounded-2xl opacity-80" 
-                      alt="Customer" 
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#1A2130] dark:text-white">Customer: {sale.customer}</p>
-                    <p className="text-[10px] text-gray-400 font-bold">{sale.time}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-[#1A2130] dark:text-white">₦{sale.amount.toLocaleString()}</p>
-                  <span className={cn(
-                    "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
-                    sale.status === 'Paid' ? "bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400" : "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                  )}>
-                    {sale.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Launch Your Merchant Store</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto font-medium">
+            Accept instantly-settled payments, invoice customers, and integrate PayTitan APIs with complete peace of mind.
+          </p>
         </div>
 
-        {/* Business Tools Ticker */}
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 rounded-[40px] shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] rounded-full -mr-10 -mt-10" />
-          <div className="relative z-10 flex items-start gap-4">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/20">
-              <Sparkles size={24} className="animate-pulse" />
+        {isSubmitted ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-white/5 border border-emerald-500/20 rounded-3xl p-6 text-center space-y-4 shadow-sm"
+          >
+            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle2 size={28} />
             </div>
-            <div className="flex-1 space-y-1">
-              <p className="text-[10px] font-black tracking-widest text-white/60 uppercase">Titan Business Advice</p>
-              <p className="text-[13px] font-bold text-white leading-tight">
-                "Small Business Owners who use Payment Links see a 40% faster settlement rate. Generate yours today."
+            <div className="space-y-1">
+              <h3 className="font-bold text-foreground">Interest Successfully Registered!</h3>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                Thank you for applying. Your corporate profile has been added to our underwriting waitlist. You are position <span className="font-bold text-indigo-500">#1,492</span> in line.
               </p>
             </div>
+            <div className="bg-emerald-500/5 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/10 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              Our compliance team will reach out via email once onboarding opens.
+            </div>
+            <button 
+              onClick={onBack}
+              className="w-full bg-indigo-500 text-white py-3.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-95 transition-all"
+            >
+              Return to Personal Dashboard
+            </button>
+          </motion.div>
+        ) : (
+          /* Underwriting Checklist & Pre-registration Form */
+          <div className="space-y-6">
+            {/* Regulatory Checklist Card */}
+            <div className="bg-white dark:bg-white/5 border border-border rounded-3xl p-5 space-y-4 shadow-sm">
+              <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <ClipboardCheck size={14} className="text-indigo-500" /> Required Corporate Documents
+              </h3>
+              <div className="space-y-3">
+                <ChecklistRow icon={<FileText size={14} />} title="CAC Registration details (RC Number)" desc="For verified business verification" />
+                <ChecklistRow icon={<ShieldCheck size={14} />} title="Director's BVN & NIN credentials" desc="Required for commercial identity check" />
+                <ChecklistRow icon={<Globe size={14} />} title="SCUML Certificate / AML Compliance" desc="Required for designated non-financial businesses" />
+              </div>
+            </div>
+
+            {/* Interest Form */}
+            <form onSubmit={handleSubmitWaitlist} className="bg-white dark:bg-white/5 border border-border rounded-3xl p-5 space-y-4 shadow-sm">
+              <div className="space-y-1">
+                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <Sparkles size={14} className="text-indigo-500" /> Pre-Register Interest
+                </h3>
+                <p className="text-xs text-muted-foreground">Submit your business profile for early underwriting queue placement.</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Business Legal Name</label>
+                  <input 
+                    type="text" 
+                    placeholder={businessNamePlaceholder} 
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="w-full h-11 bg-muted/30 dark:bg-white/5 border border-border rounded-xl px-3 text-xs outline-none focus:ring-1 focus:ring-indigo-500 text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Industry Classification</label>
+                  <select 
+                    value={businessType}
+                    onChange={(e) => setBusinessType(e.target.value)}
+                    className="w-full h-11 bg-muted/30 dark:bg-white/5 border border-border rounded-xl px-3 text-xs outline-none focus:ring-1 focus:ring-indigo-500 text-foreground"
+                  >
+                    <option value="retail">Retail / Physical Store</option>
+                    <option value="ecommerce">E-commerce / Digital Business</option>
+                    <option value="fintech">Financial / Tech Services</option>
+                    <option value="hospitality">Hospitality & Food Services</option>
+                  </select>
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-11 bg-[#1A2130] dark:bg-white text-white dark:text-black rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer shadow-sm hover:opacity-95"
+              >
+                {isSubmitting ? "Queuing Profile..." : (
+                  <>
+                    Submit For Underwriting <Send size={14} />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
-const StatItem = ({ label, value }: { label: string, value: string }) => (
-  <div className="bg-white/5 p-4 rounded-3xl">
-    <p className="text-white/40 text-[9px] font-black uppercase mb-1 tracking-widest">{label}</p>
-    <p className="text-lg font-bold text-white tracking-tight">{value}</p>
-  </div>
-);
-
-const MerchantAction = ({ icon, label, color, onClick }: { icon: React.ReactNode, label: string, color: string, onClick: () => void }) => (
-  <button 
-    onClick={() => { hapticFeedback('medium'); onClick(); }}
-    className={cn(
-      "w-full p-6 rounded-[40px] flex flex-col items-center gap-3 transition-all active:scale-95 shadow-lg",
-      color, "text-white"
-    )}
-  >
-    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+const ChecklistRow = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
+  <div className="flex items-start gap-3">
+    <div className="w-6 h-6 rounded-lg bg-indigo-500/5 text-indigo-500 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-500/10">
       {icon}
     </div>
-    <span className="text-[11px] font-black uppercase tracking-widest italic">{label}</span>
-  </button>
+    <div className="space-y-0.5">
+      <p className="text-xs font-semibold text-foreground leading-normal">{title}</p>
+      <p className="text-[10px] text-muted-foreground font-medium">{desc}</p>
+    </div>
+  </div>
 );
 
 export default MerchantModeScreen;

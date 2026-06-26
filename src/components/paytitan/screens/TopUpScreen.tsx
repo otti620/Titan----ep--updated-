@@ -169,8 +169,8 @@ const TopUpScreen = ({ onBack, onSuccess }: { onBack: () => void, onSuccess: (am
           <div ref={sentinelRef} className="h-1 w-full" />
           
           <div className="space-y-1">
-            <h2 className="large-title tracking-tight text-foreground">Fund Wealth</h2>
-            <p className="caption-1 text-muted-foreground">Add capital to your Titan dashboard instantly.</p>
+            <h2 className="large-title tracking-tight text-foreground">Add Money</h2>
+            <p className="caption-1 text-muted-foreground">Add funds to your Titan wallet instantly.</p>
           </div>
 
           <div className="ios-list-group p-8 flex flex-col items-center space-y-4">

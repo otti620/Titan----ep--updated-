@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Users2, User, LayoutGrid, PiggyBank, History, Zap, Loader2, WifiOff, ShieldCheck, Sparkles } from 'lucide-react';
+import { Home, Users2, User, LayoutGrid, History, Zap, Loader2, WifiOff, ShieldCheck, Sparkles, Brain } from 'lucide-react';
 import HomeScreen from './screens/HomeScreen';
 import PaymentsScreen from './screens/PaymentsScreen';
 import CirclesScreen from './screens/CirclesScreen';
-import SavingsScreen from './screens/SavingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminPanel from './admin/AdminPanel';
 
@@ -136,7 +135,7 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
 
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'circles', label: 'Tribe', icon: Users2 },
+    { id: 'titan-ai', label: 'Titan AI', icon: Brain },
     { id: 'payments', label: 'Pay', icon: LayoutGrid },
     { id: 'rewards', label: 'Rewards', icon: Sparkles },
   ];
@@ -144,7 +143,7 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
   const handleNavigate = (screen: string) => {
     if (isProcessing) return; // Block navigation while critical processing is happening
     hapticFeedback('medium');
-    if (['home', 'payments', 'circles', 'savings', 'profile'].includes(screen)) {
+    if (['home', 'payments', 'titan-ai', 'profile'].includes(screen)) {
       setActiveTab(screen);
       setDrawerScreen(null);
     } else if (screen.startsWith('transfer-')) {
@@ -226,15 +225,8 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
               <div className="pb-32 min-h-full">
                 {activeTab === 'home' && <HomeScreen onNavigate={handleNavigate} />}
                 {activeTab === 'payments' && <PaymentsScreen onBack={() => setActiveTab('home')} onNavigate={handleNavigate} />}
-                {activeTab === 'circles' && (
-                  <CirclesScreen 
-                    onCreate={() => setDrawerScreen('create-circle')} 
-                    onJoin={() => setDrawerScreen('join-circle')}
-                    onSelectCircle={(circle) => {
-                      setSelectedCircle(circle);
-                      setDrawerScreen('tribe-hub');
-                    }}
-                  />
+                {activeTab === 'titan-ai' && (
+                  <TitanAIScreen onBack={() => setActiveTab('home')} />
                 )}
                 {activeTab === 'rewards' && <RewardsScreen />}
                 {activeTab === 'profile' && <ProfileScreen onLogout={onLogout} isAdmin={isAdmin} onAdmin={() => setShowAdmin(true)} onEdit={() => setDrawerScreen('edit-profile')} onKYC={() => setDrawerScreen('kyc')} onSupport={() => setDrawerScreen('support')} onReferral={() => setDrawerScreen('referral')} onChangePin={() => setDrawerScreen('change-pin')} onSecurity={() => setDrawerScreen('security')} onSubscriptions={() => setDrawerScreen('subscriptions')} onNavigate={handleNavigate} />}
@@ -251,12 +243,12 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
         )}
       </AnimatePresence>
 
-      {/* iOS styled Bottom Tab Bar */}
+      {/* iOS styled Bottom Tab Bar - Premium Complete Glass */}
       {!showAdmin && (
-        <div className="fixed bottom-0 inset-x-0 z-50 flex justify-center bg-[#F2F2F7]/90 dark:bg-black/90 backdrop-blur-xl border-t border-border pt-2"
-          style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+        <div className="fixed bottom-4 inset-x-4 z-50 flex justify-center bg-white/20 dark:bg-black/30 backdrop-blur-3xl border border-white/30 dark:border-white/10 pt-2 pb-2 rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
+          style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
         >
-          <div className="w-full max-w-md flex justify-around items-center px-2">
+          <div className="w-full max-w-md flex justify-around items-center px-4">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -266,9 +258,9 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
                   <button 
                     key={tab.id} 
                     onClick={() => { hapticFeedback('heavy'); setActiveTab('payments'); }}
-                    className="flex flex-col items-center gap-[4px] flex-1 py-1 group"
+                    className="flex flex-col items-center justify-center flex-1 py-1 group relative"
                   >
-                    <div className="w-12 h-12 bg-indigo-500 rounded-[14px] flex items-center justify-center text-white shadow-sm transition-transform -mt-6 group-active:scale-95 duration-150 ios-spring">
+                    <div className="w-13 h-13 bg-gradient-to-tr from-indigo-500 to-violet-600 rounded-[18px] flex items-center justify-center text-white shadow-[0_6px_24px_rgba(99,102,241,0.5)] dark:shadow-[0_6px_24px_rgba(99,102,241,0.3)] border border-indigo-400/40 -mt-6 transition-transform group-active:scale-90 duration-200 ios-spring">
                       <PayTitanLogo size={28} />
                     </div>
                   </button>
@@ -280,21 +272,25 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
                   key={tab.id} 
                   onClick={() => { hapticFeedback('light'); setActiveTab(tab.id); }} 
                   className={cn(
-                    "flex flex-col items-center gap-1 flex-1 py-1 transition-transform active:scale-95 duration-150 ios-spring",
+                    "flex flex-col items-center gap-1 flex-1 py-1 transition-transform active:scale-95 duration-150 ios-spring relative",
                     isActive ? "text-indigo-500" : "text-muted-foreground saturate-50"
                   )}
                 >
                   <motion.div
-                    animate={{ scale: isActive ? 1.1 : 1 }}
+                    animate={{ scale: isActive ? 1.15 : 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    className="relative flex items-center justify-center"
                   >
                     <Icon 
-                      size={25} 
-                      strokeWidth={isActive ? 2 : 1.5} 
+                      size={24} 
+                      strokeWidth={isActive ? 2.5 : 1.5} 
                       fill={isActive ? 'currentColor' : 'none'} 
                     />
+                    {isActive && (
+                      <span className="absolute -top-1.5 -right-1.5 w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                    )}
                   </motion.div>
-                  <span className={cn("text-[10px] font-medium tracking-wide mt-0.5", isActive ? "font-semibold" : "")}>
+                  <span className={cn("text-[10px] tracking-wide mt-0.5 transition-colors duration-150", isActive ? "font-bold text-indigo-500" : "font-semibold text-muted-foreground")}>
                     {tab.label}
                   </span>
                 </button>
@@ -304,21 +300,25 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
             <button 
               onClick={() => { hapticFeedback('light'); setActiveTab('profile'); }}
               className={cn(
-                "flex flex-col items-center gap-1 flex-1 py-1 transition-transform active:scale-95 duration-150 ios-spring",
+                "flex flex-col items-center gap-1 flex-1 py-1 transition-transform active:scale-95 duration-150 ios-spring relative",
                 activeTab === 'profile' ? "text-indigo-500" : "text-muted-foreground saturate-50"
               )}
             >
               <motion.div
-                 animate={{ scale: activeTab === 'profile' ? 1.1 : 1 }}
+                 animate={{ scale: activeTab === 'profile' ? 1.15 : 1 }}
                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                 className="relative flex items-center justify-center"
               >
                  <User 
-                   size={25} 
-                   strokeWidth={activeTab === 'profile' ? 2 : 1.5} 
+                   size={24} 
+                   strokeWidth={activeTab === 'profile' ? 2.5 : 1.5} 
                    fill={activeTab === 'profile' ? 'currentColor' : 'none'} 
                  />
+                 {activeTab === 'profile' && (
+                   <span className="absolute -top-1.5 -right-1.5 w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                 )}
               </motion.div>
-              <span className={cn("text-[10px] font-medium tracking-wide mt-0.5", activeTab === 'profile' ? "font-semibold" : "")}>
+              <span className={cn("text-[10px] tracking-wide mt-0.5 transition-colors duration-150", activeTab === 'profile' ? "font-bold text-indigo-500" : "font-semibold text-muted-foreground")}>
                 Profile
               </span>
             </button>

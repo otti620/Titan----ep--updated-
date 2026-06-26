@@ -174,7 +174,7 @@ export default function ProfileScreen({
           <p className="px-4 footnote text-muted-foreground uppercase tracking-widest">Insights</p>
           <div className="ios-list-group">
             <SettingsRow 
-              label="Wealth Recap" 
+              label="Monthly Recap" 
               icon={TrendingUp} 
               color="text-emerald-500" 
               value="New"
