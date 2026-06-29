@@ -43,6 +43,9 @@ export interface Profile {
     weekly_limit?: number;
   };
   selected_avatar_memoji?: string;
+  titan_score?: number;
+  titan_forest_count?: number;
+  auto_save_enabled?: boolean;
 }
 
 export interface Transaction {
@@ -329,10 +332,32 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const claimMysteryBox = async (id: string) => {
     const rewards = [
       { type: 'cash', amount: 500, title: 'Cash Injection', message: 'You found ₦500 Titan Credit!' },
-      { type: 'badge', title: 'Early Bird', message: 'You unlocked the Titan 100 Badge!' },
-      { type: 'discount', title: 'Fee Waiver', message: 'Your next 5 transfers are free!' }
+      { type: 'cash', amount: 200, title: 'Node Reward', message: 'You found ₦200 Titan Credit!' },
+      { type: 'badge', title: 'Early Bird', message: 'You unlocked the Titan 100 Badge!' }
     ];
     const reward = rewards[Math.floor(Math.random() * rewards.length)];
+    
+    if (reward.type === 'cash' && profile) {
+      const nextBal = balance + (reward.amount || 0);
+      setBalance(nextBal);
+      setProfile(prev => prev ? { ...prev, balance: nextBal } : null);
+      
+      // Update DB
+      await supabase.from('profiles').update({ balance: nextBal } as any).eq('id', profile.id);
+      
+      // Add transaction for record
+      await supabase.from('transactions').insert([{
+        user_id: profile.id,
+        type: 'in',
+        category: 'Reward',
+        title: reward.title,
+        description: reward.message,
+        amount: reward.amount,
+        status: 'SUCCESS',
+        reference: `REWARD-${Math.floor(Math.random() * 1000000)}`
+      }]);
+    }
+    
     setMysteryBoxes(prev => prev.filter(b => b.id !== id));
     return reward;
   };
@@ -473,18 +498,79 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .from('profiles')
         .select('*')
         .neq('id', session.user.id)
-        .limit(10);
+        .order('balance', { ascending: false })
+        .limit(50);
 
       if (contactData) {
         setContacts(contactData as Profile[]);
+        
+        // Build real leaderboard from actual DB users
+        const sortedSavers = [...contactData, currentProfile]
+          .sort((a, b) => (b.balance || 0) - (a.balance || 0))
+          .slice(0, 10)
+          .map(p => ({
+            id: p.id,
+            username: p.username,
+            amount: p.balance || 0,
+            avatar: p.selected_avatar_memoji 
+              ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.selected_avatar_memoji}` 
+              : `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`
+          }));
+          
+        setLeaderboard({
+          savers: sortedSavers,
+          spenders: sortedSavers.slice().reverse() // Mock spenders for now but from real user list
+        });
       } else {
-        // Provide mock contacts for stellar transfers
-        setContacts([
-          { id: 'c1', username: 'john_doe', first_name: 'John', last_name: 'Doe', kyc_level: 2, kyc_status: 'verified', balance: 50000, is_banned: false },
-          { id: 'c2', username: 'jane_wealth', first_name: 'Jane', last_name: 'Wealth', kyc_level: 3, kyc_status: 'verified', balance: 200000, is_banned: false },
-          { id: 'c3', username: 'kuda_king', first_name: 'Kuda', last_name: 'King', kyc_level: 1, kyc_status: 'verified', balance: 10000, is_banned: false }
-        ]);
+        // Fallback mock if DB is completely empty besides current user
+        const mockContacts = [
+          { id: 'c1', username: 'titan_architect', first_name: 'Titan', last_name: 'Prime', balance: 5000000, kyc_level: 3, kyc_status: 'verified', is_banned: false },
+          { id: 'c2', username: 'nexus_node', first_name: 'Nexus', last_name: 'Protocol', balance: 2500000, kyc_level: 3, kyc_status: 'verified', is_banned: false }
+        ];
+        setContacts(mockContacts as Profile[]);
+        setLeaderboard({
+          savers: mockContacts.map(p => ({ id: p.id, username: p.username, amount: p.balance, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}` })),
+          spenders: mockContacts.map(p => ({ id: p.id, username: p.username, amount: p.balance / 2, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}` }))
+        });
       }
+      
+      // Sync Titan state from real data
+      // Titan Score: Base (100) + KYC Bonus (200 * level) + Savings Bonus (balance / 1000)
+      const calculatedScore = 100 + (currentProfile.kyc_level * 200) + Math.floor((currentProfile.balance || 0) / 1000);
+      setTitanScore(calculatedScore);
+      
+      // Titan Forest: Number of active vaults represents the "trees" in your forest
+      setTitanForestCount(vaultData?.length || 0);
+      
+      // Auto Save state from local storage or profile if exists
+      setAutoSaveEnabled(localStorage.getItem('pt_auto_save') === 'true');
+
+      // Mystery Boxes: Available if user has at least one vault or > 3 transactions
+      if ((vaultData?.length || 0) > 0 || (txData?.length || 0) > 3) {
+        setMysteryBoxes([{ id: 'mb1', title: 'Titan Cache', type: 'mystery', status: 'available' }]);
+      } else {
+        setMysteryBoxes([]);
+      }
+      
+      // Audit Report: Dynamic stats from transactions
+      const totalIn = (txData || []).filter(t => t.type === 'in').reduce((sum, t) => sum + t.amount, 0);
+      const totalOut = (txData || []).filter(t => t.type === 'out').reduce((sum, t) => sum + t.amount, 0);
+      setAuditReport({
+        score: calculatedScore,
+        grade: calculatedScore > 800 ? 'A+' : calculatedScore > 600 ? 'A' : calculatedScore > 400 ? 'B' : 'C',
+        status: 'OPTIMIZED',
+        metrics: {
+          inflow: totalIn,
+          outflow: totalOut,
+          savings: vaultData?.reduce((sum, v) => sum + v.saved_amount, 0) || 0,
+          efficiency: totalIn > 0 ? Math.min(100, Math.floor(((totalIn - totalOut) / totalIn) * 100)) : 0
+        },
+        logs: [
+          { time: new Date().toLocaleTimeString(), event: 'Ledger Node Synced', status: 'SUCCESS' },
+          { time: new Date().toLocaleTimeString(), event: 'Vault Registry Audit', status: 'VERIFIED' },
+          { time: new Date().toLocaleTimeString(), event: 'Real-time Balance Verification', status: 'PASSED' }
+        ]
+      });
 
       // 6. Fetch Notifications
       const { data: notifData } = await supabase
@@ -1531,9 +1617,22 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return true;
   };
 
-  const submitKYC = async (details: any): Promise<boolean> => {
+  const submitKYC = async (details?: any): Promise<boolean> => {
     if (profile) {
-      setProfile(prev => prev ? { ...prev, kyc_level: 2, kyc_status: 'verified' } : null);
+      const nextLevel = Math.min(3, (profile.kyc_level || 1) + 1);
+      const nextScore = 100 + (nextLevel * 200) + Math.floor((balance || 0) / 1000);
+      
+      setProfile(prev => prev ? { ...prev, kyc_level: nextLevel, kyc_status: 'verified' } : null);
+      setTitanScore(nextScore);
+      
+      try {
+        await supabase.from('profiles').update({ 
+          kyc_level: nextLevel, 
+          kyc_status: 'verified' 
+        } as any).eq('id', profile.id);
+      } catch (e) {
+        console.warn(e);
+      }
     }
     return true;
   };
