@@ -14,6 +14,17 @@ interface TribeScreenProps {
 
 const TribeScreen = ({ tribe, onBack, onSelectFeature }: TribeScreenProps) => {
   const [activeTab, setActiveTab] = useState<'features' | 'activities'>('features');
+  
+  if (!tribe) return (
+    <div className="h-full w-full flex items-center justify-center p-8 text-center bg-black">
+      <div className="space-y-4">
+        <Users size={48} className="mx-auto text-muted-foreground opacity-20" />
+        <h3 className="text-white font-bold">Node Not Found</h3>
+        <button onClick={onBack} className="px-6 py-2 bg-indigo-500 text-white rounded-full text-xs font-bold uppercase tracking-widest">Return</button>
+      </div>
+    </div>
+  );
+
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Join my Tribe on PayTitan! Use the 6-digit code ${tribe?.invite_code || ''} to start saving and splitting bills together. Download the app today.`)}`;
 
   const handleShare = async () => {

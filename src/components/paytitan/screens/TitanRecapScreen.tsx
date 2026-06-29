@@ -17,6 +17,7 @@ const TitanRecapScreen = ({ onBack, type }: TitanRecapScreenProps) => {
   const [step, setStep] = useState(0);
 
   const stats = useMemo(() => {
+    if (!transactions) return null;
     const now = new Date();
     const filteredTxs = transactions.filter(tx => {
       const txDate = new Date(tx.created_at);
@@ -80,7 +81,7 @@ const TitanRecapScreen = ({ onBack, type }: TitanRecapScreenProps) => {
   };
 
   return (
-    <div className={cn("h-full w-full flex flex-col overflow-hidden text-white", stats.color, "bg-gradient-to-br")}>
+    <div className={cn("h-full w-full flex flex-col overflow-hidden text-white", stats?.color || "bg-black", "bg-gradient-to-br")}>
       <div className="px-8 pt-8 pb-4 flex justify-between items-center relative z-20">
         <button onClick={onBack} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
           <ArrowLeft className="w-5 h-5 text-white" />
@@ -92,8 +93,14 @@ const TitanRecapScreen = ({ onBack, type }: TitanRecapScreenProps) => {
       </div>
 
       <div className="flex-1 relative flex flex-col items-center justify-center p-8">
-        <AnimatePresence mode="wait">
-          {step === 0 && (
+        {!stats ? (
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="animate-spin" />
+            <p className="text-xs font-bold uppercase tracking-widest opacity-50">Syncing Ledger...</p>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {step === 0 && (
             <motion.div 
               key="intro"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -257,6 +264,7 @@ const TitanRecapScreen = ({ onBack, type }: TitanRecapScreenProps) => {
             </motion.div>
           )}
         </AnimatePresence>
+        )}
       </div>
       
       {/* Step Indicators */}

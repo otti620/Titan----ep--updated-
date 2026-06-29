@@ -185,6 +185,16 @@ interface PayTitanContextType {
   markNotificationAsRead: (id: string) => void;
   handleRequestAction: (id: string, action: 'accept' | 'decline') => void;
   isAdmin: boolean;
+  
+  // New Titan Ecosystem Features
+  titanScore: number;
+  titanForestCount: number;
+  leaderboard: { savers: any[]; spenders: any[] };
+  auditReport: any;
+  mysteryBoxes: any[];
+  autoSaveEnabled: boolean;
+  toggleAutoSave: () => void;
+  claimMysteryBox: (id: string) => Promise<any>;
 }
 
 const PayTitanContext = createContext<PayTitanContextType | undefined>(undefined);
@@ -269,12 +279,63 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isInstallable, setIsInstallable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const aiFlowRef = useRef<any>(null);
+
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'reconnecting' | string>('online');
   const [cards, setCards] = useState<any[]>([]);
   
   // Global Overlay systems
   const [rewardQueue, setRewardQueue] = useState<any[]>([]);
   const [activeNotification, setActiveNotification] = useState<any | null>(null);
+  
+  const [titanScore, setTitanScore] = useState(profile?.kyc_level ? profile.kyc_level * 200 + 150 : 350);
+  const [titanForestCount, setTitanForestCount] = useState(12);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [mysteryBoxes, setMysteryBoxes] = useState([
+    { id: 'mb1', title: 'Titan Cache', type: 'mystery', status: 'available' }
+  ]);
+  const [leaderboard, setLeaderboard] = useState({
+    savers: [
+      { id: 'u1', username: 'alex_titan', amount: 5000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' },
+      { id: 'u2', username: 'sarah_vault', amount: 3500000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah' },
+      { id: 'u3', username: 'mike_ledger', amount: 2800000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike' }
+    ],
+    spenders: [
+      { id: 'u4', username: 'boss_titan', amount: 12000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Boss' },
+      { id: 'u5', username: 'luxury_arch', amount: 9000000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Luxury' },
+      { id: 'u6', username: 'spend_legend', amount: 7500000, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Legend' }
+    ]
+  });
+  
+  const auditReport = {
+    month: 'June 2026',
+    securityScore: 98,
+    uptime: '99.99%',
+    totalVolume: '₦4.2B',
+    activeNodes: 124,
+    lastAudit: new Date().toISOString(),
+    logs: [
+      { time: '08:42:11', event: 'Node Synchronized', status: 'SUCCESS' },
+      { time: '09:15:34', event: 'Ledger Audit', status: 'VERIFIED' },
+      { time: '10:02:45', event: 'System Integrity Check', status: 'PASSED' }
+    ]
+  };
+
+  const toggleAutoSave = () => {
+    setAutoSaveEnabled(!autoSaveEnabled);
+    localStorage.setItem('pt_auto_save', String(!autoSaveEnabled));
+  };
+
+  const claimMysteryBox = async (id: string) => {
+    const rewards = [
+      { type: 'cash', amount: 500, title: 'Cash Injection', message: 'You found ₦500 Titan Credit!' },
+      { type: 'badge', title: 'Early Bird', message: 'You unlocked the Titan 100 Badge!' },
+      { type: 'discount', title: 'Fee Waiver', message: 'Your next 5 transfers are free!' }
+    ];
+    const reward = rewards[Math.floor(Math.random() * rewards.length)];
+    setMysteryBoxes(prev => prev.filter(b => b.id !== id));
+    return reward;
+  };
   
   const deferredPromptRef = useRef<any>(null);
 
@@ -1134,7 +1195,36 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return null;
       };
 
-      // Profile Update Direct Handling
+      if (text.includes('cancel') || text.includes('abort') || text.includes('stop') || text.includes('nevermind')) {
+        aiFlowRef.current = null;
+        return { success: true, message: "Action cancelled. How else can I assist you today?" };
+      }
+
+      // Extract explicit new entities
+      let amount = parseAmount(text);
+      let phone = parsePhone(text);
+      let network = parseNetwork(text);
+      let accountNo = parseAccountNo(text);
+      let recipient = parseRecipient(text);
+
+      let intent = aiFlowRef.current?.intent || '';
+      
+      // Override or detect new intent if explicit
+      if (text.includes('transfer') || text.includes('send') || text.includes('give')) { intent = 'transfer'; aiFlowRef.current = { intent }; }
+      else if (text.includes('fund') || text.includes('deposit') || text.includes('topup') || text.includes('top up')) { intent = 'topup'; aiFlowRef.current = { intent }; }
+      else if (text.includes('airtime') || text.includes('recharge')) { intent = 'airtime'; aiFlowRef.current = { intent }; }
+      else if (text.includes('data') || text.includes('bundle')) { intent = 'data'; aiFlowRef.current = { intent }; }
+      else if (text.includes('bill') || text.includes('electricity') || text.includes('dstv') || text.includes('gotv') || text.includes('nepa') || text.includes('tv') || text.includes('cable') || (text.includes('pay') && !intent)) { intent = 'bill'; aiFlowRef.current = { intent }; }
+      else if (text.includes('card') && (text.includes('create') || text.includes('new') || text.includes('get'))) intent = 'create_card';
+      else if (text.includes('card') && (text.includes('freeze') || text.includes('lock') || text.includes('block'))) intent = 'lock_card';
+      else if (text.includes('card') && (text.includes('unlock') || text.includes('unfreeze'))) intent = 'unlock_card';
+      else if (text.includes('vault') || text.includes('save') || text.includes('stash') || text.includes('target')) { intent = 'vault'; aiFlowRef.current = { intent }; }
+      else if (text.includes('balance') || text.includes('how much') || text.includes('wallet status')) intent = 'balance';
+      else if (text.includes('history') || text.includes('recent') || text.includes('transaction')) intent = 'history';
+      else if (text.includes('reward') || text.includes('claim') || text.includes('earn')) intent = 'reward';
+      else if (text.includes('pdf') || text.includes('statement') || text.includes('export')) intent = 'statement';
+
+      // Profile updates
       if ((text.includes('change') || text.includes('update') || text.includes('set')) && text.includes('name')) {
         const isUsername = text.includes('username');
         const regex = isUsername ? /(?:username to)\s+@?([a-zA-Z0-9_]+)/i : /(?:name to)\s+([a-zA-Z]+)/i;
@@ -1154,124 +1244,136 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return { success: true, message: `What would you like to change your ${isUsername ? 'username' : 'name'} to? (e.g., "Change my ${isUsername ? 'username' : 'name'} to John")` };
       }
 
-      // Extract current entities
-      let amount = parseAmount(text);
-      let phone = parsePhone(text);
-      let network = parseNetwork(text);
-      let accountNo = parseAccountNo(text);
-      let recipient = parseRecipient(text);
-
-      // Determine intent
-      let intent = '';
-      if (text.includes('transfer') || text.includes('send') || text.includes('pay') || text.includes('give')) intent = 'transfer';
-      else if (text.includes('fund') || text.includes('deposit') || text.includes('topup') || text.includes('top up')) intent = 'topup';
-      else if (text.includes('airtime') || text.includes('recharge')) intent = 'airtime';
-      else if (text.includes('data') || text.includes('bundle')) intent = 'data';
-      else if (text.includes('bill') || text.includes('electricity') || text.includes('dstv') || text.includes('gotv') || text.includes('nepa') || text.includes('tv') || text.includes('cable')) intent = 'bill';
-      else if (text.includes('card') && (text.includes('create') || text.includes('new') || text.includes('get'))) intent = 'create_card';
-      else if (text.includes('card') && (text.includes('freeze') || text.includes('lock') || text.includes('block'))) intent = 'lock_card';
-      else if (text.includes('card') && (text.includes('unlock') || text.includes('unfreeze'))) intent = 'unlock_card';
-      else if (text.includes('vault') || text.includes('save') || text.includes('stash') || text.includes('target')) intent = 'vault';
-      else if (text.includes('balance') || text.includes('how much') || text.includes('wallet status')) intent = 'balance';
-      else if (text.includes('history') || text.includes('recent') || text.includes('transaction')) intent = 'history';
-      else if (text.includes('reward') || text.includes('claim') || text.includes('earn')) intent = 'reward';
-      else if (text.includes('pdf') || text.includes('statement') || text.includes('export')) intent = 'statement';
-
-      const lastTitan = messages && messages.length > 0 ? messages[messages.length - 1] : null;
-      const lastTitanText = lastTitan?.role === 'titan' ? lastTitan.text.toLowerCase() : '';
-
-      // Infer intent from last AI question if not explicitly stated
       if (!intent) {
-        if (lastTitanText.includes('how much would you like to send') || lastTitanText.includes('who would you like to send')) intent = 'transfer';
-        else if (lastTitanText.includes('how much would you like to fund') || lastTitanText.includes('how much do you want to deposit') || lastTitanText.includes('fund your wallet with')) intent = 'topup';
-        else if (lastTitanText.includes('how much airtime') || lastTitanText.includes('which network') || lastTitanText.includes('what phone number')) intent = 'airtime';
-        else if (lastTitanText.includes('how much data') || lastTitanText.includes('which network is')) intent = 'data';
-        else if (lastTitanText.includes('which bill') || lastTitanText.includes('how much would you like to pay')) intent = 'bill';
-        else if (lastTitanText.includes('how much would you like to stash')) intent = 'vault';
+        if (text.includes('hello') || text.includes('hi ') || text.includes('hey')) {
+          return { success: true, message: `Hello @${profile?.username || 'user'}! 👋\n\nI am Titan Smart Core. I can guide you step-by-step through transfers, bill payments, and profile updates.\n\nWhat would you like to do today?` };
+        }
+        return { success: true, message: `I didn't quite catch that. I am Titan Smart Core, your step-by-step financial assistant.\n\nYou can say "Transfer money", "Pay a bill", "Buy Airtime", or "Show my balance".` };
       }
 
-      // Context Recovery
-      const historyText = messages ? messages.slice(-3).map(m => m.text.toLowerCase()).join(' ') : '';
-      if (intent) {
-        if (!amount) amount = parseAmount(historyText);
-        if (!recipient && intent === 'transfer') recipient = parseRecipient(historyText);
-        if (!accountNo && intent === 'transfer') accountNo = parseAccountNo(historyText);
-        if (!network && (intent === 'airtime' || intent === 'data')) network = parseNetwork(historyText);
-        if (!phone && (intent === 'airtime' || intent === 'data')) phone = parsePhone(historyText);
+      // Update flow state with newly extracted data
+      if (aiFlowRef.current) {
+        if (amount) aiFlowRef.current.amount = amount;
+        if (recipient) aiFlowRef.current.recipient = recipient;
+        if (accountNo) aiFlowRef.current.accountNo = accountNo;
+        if (network) aiFlowRef.current.network = network;
+        if (phone) aiFlowRef.current.phone = phone;
+        
+        // Custom extractors for bills
+        const fullText = text;
+        if (fullText.includes('dstv')) { aiFlowRef.current.biller = 'DSTV Subscription'; aiFlowRef.current.cat = 'Cable TV'; }
+        else if (fullText.includes('gotv')) { aiFlowRef.current.biller = 'GOTV Subscription'; aiFlowRef.current.cat = 'Cable TV'; }
+        else if (fullText.includes('startimes')) { aiFlowRef.current.biller = 'StarTimes'; aiFlowRef.current.cat = 'Cable TV'; }
+        else if (fullText.includes('electricity') || fullText.includes('nepa')) { aiFlowRef.current.biller = 'Prepaid Electricity'; aiFlowRef.current.cat = 'Electricity'; }
       }
 
-      // Intent Handlers
       switch (intent) {
         case 'transfer': {
-          let target = accountNo || recipient;
-          if (target && target.length < 3) target = null; // discard noise
+          const state = aiFlowRef.current;
+          if (!state.amount) return { success: true, message: "Okay, let's make a transfer. How much would you like to send?" };
+          let target = state.accountNo || state.recipient;
+          if (!target || target.length < 3 || ['transfer','money','cash','funds'].includes(target)) return { success: true, message: `Got it, ₦${state.amount.toLocaleString()}. Who are you sending this to? You can provide a @username or a 10-digit bank account number.` };
           
-          if (!amount) return { success: true, message: "Sure, I can help with a transfer. How much would you like to send?" };
-          if (!target) return { success: true, message: `Got it, ₦${amount.toLocaleString()}. Who would you like to send this to? You can provide a @username or a 10-digit bank account number.` };
-          
-          if (balance < amount) return { success: false, message: `⚠️ Transfer declined: Insufficient balance. You attempted to transfer ₦${amount.toLocaleString()} but your balance is ₦${balance.toLocaleString()}.` };
+          if (balance < state.amount) {
+            aiFlowRef.current = null;
+            return { success: false, message: `⚠️ Transfer declined: Insufficient balance. You attempted to transfer ₦${state.amount.toLocaleString()} but your balance is ₦${balance.toLocaleString()}.` };
+          }
 
-          const isBank = !!accountNo;
+          const isBank = !!state.accountNo;
+          aiFlowRef.current = null; // Clear state on success
           return {
             success: true,
-            message: `Double-checking credentials. Let's authorize your transfer of **₦${amount.toLocaleString()}** to **${isBank ? 'Account ' + target : '@' + target}**.`,
-            pendingTx: { type: 'transfer', amount, recipient: target, note: isBank ? 'Smart AI Bank Transfer' : 'Smart AI Automated Transfer' }
+            message: `Great. Let's authorize your transfer of **₦${state.amount.toLocaleString()}** to **${isBank ? 'Account ' + target : '@' + target}**. Please enter your security PIN to confirm.`,
+            pendingTx: { type: 'transfer', amount: state.amount, recipient: target, note: isBank ? 'Smart AI Bank Transfer' : 'Smart AI Automated Transfer' }
           };
         }
 
         case 'topup': {
-          if (!amount) return { success: true, message: "How much would you like to fund your wallet with?" };
+          const state = aiFlowRef.current;
+          if (!state.amount) return { success: true, message: "Sure, let's fund your wallet. How much do you want to deposit?" };
+          
+          aiFlowRef.current = null;
           return {
             success: true,
-            message: `Initializing gateway. Let's authorize a wallet deposit of **₦${amount.toLocaleString()}** with your security PIN.`,
-            pendingTx: { type: 'topup', amount, recipient: profile?.id || 'guest' }
+            message: `Initializing gateway. Let's authorize a wallet deposit of **₦${state.amount.toLocaleString()}** with your security PIN.`,
+            pendingTx: { type: 'topup', amount: state.amount, recipient: profile?.id || 'guest' }
           };
         }
 
         case 'airtime': {
-          if (!amount) return { success: true, message: "How much airtime would you like to buy?" };
-          if (!phone) return { success: true, message: `₦${amount.toLocaleString()} airtime. What phone number should I recharge?` };
-          if (!network) return { success: true, message: `Okay, for ${phone}. Which network? (MTN, Airtel, Glo, or 9mobile)` };
+          const state = aiFlowRef.current;
+          if (!state.amount) return { success: true, message: "Let's buy airtime. How much do you want?" };
+          if (!state.phone) return { success: true, message: `₦${state.amount.toLocaleString()} airtime. What phone number should I recharge?` };
+          if (!state.network) return { success: true, message: `Got the number ${state.phone}. Which network is this? (MTN, Airtel, Glo, or 9mobile)` };
           
-          if (balance < amount) return { success: false, message: `⚠️ Airtime purchase declined: Insufficient balance.` };
+          if (balance < state.amount) {
+            aiFlowRef.current = null;
+            return { success: false, message: `⚠️ Airtime purchase declined: Insufficient balance.` };
+          }
+          
+          aiFlowRef.current = null;
           return {
             success: true,
-            message: `Ready to recharge. Let's authorize **₦${amount.toLocaleString()}** **${network}** airtime for **${phone}**.`,
-            pendingTx: { type: 'airtime', amount, recipient: phone, extra: { network, biller: `${network} Airtime VTU`, category: 'Airtime' } }
+            message: `Ready to recharge. Let's authorize **₦${state.amount.toLocaleString()}** **${state.network}** airtime for **${state.phone}**.`,
+            pendingTx: { type: 'airtime', amount: state.amount, recipient: state.phone, extra: { network: state.network, biller: `${state.network} Airtime VTU`, category: 'Airtime' } }
           };
         }
 
         case 'data': {
-          if (!amount) amount = 1000; // default assumption for simplicity if they just say "buy data for 081..."
-          if (!phone) return { success: true, message: `What phone number should I buy data for?` };
-          if (!network) return { success: true, message: `Which network is ${phone} on?` };
+          const state = aiFlowRef.current;
+          if (!state.amount) state.amount = 1000;
+          if (!state.phone) return { success: true, message: `Let's buy a data bundle. What phone number should I buy data for?` };
+          if (!state.network) return { success: true, message: `Which network is ${state.phone} on?` };
           
-          if (balance < amount) return { success: false, message: `⚠️ Data purchase declined: Insufficient balance.` };
+          if (balance < state.amount) {
+            aiFlowRef.current = null;
+            return { success: false, message: `⚠️ Data purchase declined: Insufficient balance.` };
+          }
+          
+          aiFlowRef.current = null;
           return {
             success: true,
-            message: `Preparing data subscription. Let's authorize **₦${amount.toLocaleString()}** for **${network}** data bundle for **${phone}**.`,
-            pendingTx: { type: 'data', amount, recipient: phone, extra: { network, biller: `${network} Mobile Data bundle`, category: 'Data' } }
+            message: `Preparing data subscription. Let's authorize **₦${state.amount.toLocaleString()}** for **${state.network}** data bundle for **${state.phone}**.`,
+            pendingTx: { type: 'data', amount: state.amount, recipient: state.phone, extra: { network: state.network, biller: `${state.network} Mobile Data bundle`, category: 'Data' } }
           };
         }
 
         case 'bill': {
-          let biller = '';
-          let cat = 'Bills';
-          const fullText = (historyText + ' ' + text).toLowerCase();
-          if (fullText.includes('dstv')) { biller = 'DSTV Subscription'; cat = 'Cable TV'; }
-          else if (fullText.includes('gotv')) { biller = 'GOTV Subscription'; cat = 'Cable TV'; }
-          else if (fullText.includes('startimes')) { biller = 'StarTimes'; cat = 'Cable TV'; }
-          else if (fullText.includes('electricity') || fullText.includes('nepa')) { biller = 'Prepaid Electricity'; cat = 'Electricity'; }
+          const state = aiFlowRef.current;
+          if (!state.biller) return { success: true, message: "Let's pay a bill. Which service are you paying for? (e.g., DSTV, GOTV, Electricity)" };
+          if (!state.amount) return { success: true, message: `How much would you like to pay for ${state.biller}?` };
           
-          if (!biller) return { success: true, message: "Which bill would you like to pay? (e.g., DSTV, GOTV, Electricity)" };
-          if (!amount) return { success: true, message: `How much would you like to pay for ${biller}?` };
+          if (balance < state.amount) {
+            aiFlowRef.current = null;
+            return { success: false, message: `⚠️ Bill payment declined: Insufficient balance.` };
+          }
           
-          if (balance < amount) return { success: false, message: `⚠️ Bill payment declined: Insufficient balance.` };
+          const biller = state.biller;
+          const cat = state.cat;
+          aiFlowRef.current = null;
           return {
             success: true,
-            message: `Preparing bill payment. Let's authorize **₦${amount.toLocaleString()}** for **${biller}**.`,
-            pendingTx: { type: 'data', amount, recipient: profile?.id || 'guest', extra: { network: biller, biller, category: cat } }
+            message: `Preparing bill payment. Let's authorize **₦${state.amount.toLocaleString()}** for **${biller}**.`,
+            pendingTx: { type: 'data', amount: state.amount, recipient: profile?.id || 'guest', extra: { network: biller, biller, category: cat } }
           };
+        }
+
+        case 'vault': {
+          const state = aiFlowRef.current;
+          if (!state.amount) return { success: true, message: "Let's open a Smart Vault. How much would you like to stash?" };
+          if (balance < state.amount) {
+            aiFlowRef.current = null;
+            return { success: false, message: "You don't have enough balance to stash that amount into a vault." };
+          }
+          
+          const amt = state.amount;
+          aiFlowRef.current = null;
+          const res = await createVault(`AI Auto-Stash`, amt, 'General Savings', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
+          if (res) {
+            await fundUserWallet(profile?.id || 'guest', -amt);
+            return { success: true, message: `🏦 I have securely stashed **₦${amt.toLocaleString()}** into a new Smart Vault for you. It's now earning yield!` };
+          }
+          return { success: false, message: "Failed to create vault." };
         }
 
         case 'create_card': {
@@ -1294,18 +1396,6 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const res = await toggleCardLock(cards[0].id);
           if (res) return { success: true, message: `🔓 I have unfrozen your virtual card (*${cards[0].last4}). It is now ready for transactions.` };
           return { success: false, message: "Failed to unlock card." };
-        }
-
-        case 'vault': {
-          if (!amount) return { success: true, message: "How much would you like to stash in a vault?" };
-          if (balance < amount) return { success: false, message: "You don't have enough balance to stash that amount into a vault." };
-          
-          const res = await createVault(`AI Auto-Stash`, amount, 'General Savings', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
-          if (res) {
-            await fundUserWallet(profile?.id || 'guest', -amount);
-            return { success: true, message: `🏦 I have securely stashed **₦${amount.toLocaleString()}** into a new Smart Vault for you. It's now earning yield!` };
-          }
-          return { success: false, message: "Failed to create vault." };
         }
 
         case 'balance': {
@@ -1336,13 +1426,6 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         default: {
-          if (text.includes('hello') || text.includes('hi ') || text.includes('hey')) {
-            return { success: true, message: `Hello @${profile?.username || 'user'}! 👋\n\nI am Titan Smart Core. I can guide you through transfers, bill payments, and profile updates. Just let me know what you want to do!` };
-          }
-          if (text.includes('help') || text.includes('commands') || text.includes('what can you do')) {
-            return { success: true, message: `🛠️ **Titan Smart Core Command Suite**\n\n1. **Transfers**: 'Send 3k' or 'Transfer money'\n2. **Wallet Topup**: 'Fund wallet'\n3. **Bills & Airtime**: 'Buy airtime' or 'Pay electricity'\n4. **Cards**: 'Create a new card' or 'Freeze my card'\n5. **Savings**: 'Stash 50k in a vault'\n6. **Ledger**: 'Show my balance'` };
-          }
-          
           return {
             success: true,
             message: `I didn't quite catch that. I am Titan Smart Core, your financial assistant. I can help you send money, pay bills, buy airtime, and update your profile.\n\nWhat would you like to do?`
@@ -1570,7 +1653,15 @@ export const PayTitanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       clearAllNotifications,
       markNotificationAsRead,
       handleRequestAction,
-      isAdmin
+      isAdmin,
+      titanScore,
+      titanForestCount,
+      leaderboard,
+      auditReport,
+      mysteryBoxes,
+      autoSaveEnabled,
+      toggleAutoSave,
+      claimMysteryBox
     }}>
       {children}
     </PayTitanContext.Provider>

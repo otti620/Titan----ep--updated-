@@ -2,12 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Users2, User, LayoutGrid, History, Zap, Loader2, WifiOff, ShieldCheck, Sparkles, Brain } from 'lucide-react';
+import { Home, Users2, User, LayoutGrid, History, Zap, Loader2, WifiOff, ShieldCheck, Sparkles, Brain, Target } from 'lucide-react';
 import HomeScreen from './screens/HomeScreen';
 import PaymentsScreen from './screens/PaymentsScreen';
 import CirclesScreen from './screens/CirclesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminPanel from './admin/AdminPanel';
+import LeaderboardScreen from './screens/LeaderboardScreen';
+import TitanAuditScreen from './screens/TitanAuditScreen';
+import TitanForestScreen from './screens/TitanForestScreen';
+import TitanMissionScreen from './screens/TitanMissionScreen';
 
 // Sub-screens
 import AirtimeScreen from './screens/AirtimeScreen';
@@ -142,7 +146,7 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
   const handleNavigate = (screen: string) => {
     if (isProcessing) return; // Block navigation while critical processing is happening
     hapticFeedback('medium');
-    if (['home', 'payments', 'titan-ai', 'profile'].includes(screen)) {
+    if (['home', 'payments', 'titan-ai', 'profile', 'rewards'].includes(screen)) {
       setActiveTab(screen);
       setDrawerScreen(null);
     } else if (screen.startsWith('transfer-')) {
@@ -321,9 +325,14 @@ export default function MainAppShell({ onLogout }: { onLogout: () => void }) {
       <ActionDrawer 
         isOpen={!!drawerScreen} 
         onClose={() => setDrawerScreen(null)}
-        fullScreen={['titan-ai', 'titan-nearby', 'transfer', 'bank-transfer', 'request-money', 'history', 'topup', 'airtime', 'data', 'notifications', 'qr-code', 'edit-profile', 'kyc', 'support', 'referral', 'security', 'subscriptions', 'create-circle', 'join-circle', 'tribe-hub', 'bills', 'cable-tv', 'electricity', 'betting', 'limits', 'month-recap', 'year-recap', 'contacts', 'legal'].includes(drawerScreen || '')}
+        fullScreen={['titan-ai', 'titan-nearby', 'transfer', 'bank-transfer', 'request-money', 'history', 'topup', 'airtime', 'data', 'notifications', 'qr-code', 'edit-profile', 'kyc', 'support', 'referral', 'security', 'subscriptions', 'create-circle', 'join-circle', 'tribe-hub', 'bills', 'cable-tv', 'electricity', 'betting', 'limits', 'month-recap', 'year-recap', 'contacts', 'legal', 'leaderboard', 'audit', 'forest', 'mission'].includes(drawerScreen || '')}
       >
         <div className="min-h-[400px]">
+          {drawerScreen === 'leaderboard' && <LeaderboardScreen onBack={() => setDrawerScreen(null)} />}
+          {drawerScreen === 'audit' && <TitanAuditScreen onBack={() => setDrawerScreen(null)} />}
+          {drawerScreen === 'forest' && <TitanForestScreen onBack={() => setDrawerScreen(null)} />}
+          {drawerScreen === 'mission' && <TitanMissionScreen onBack={() => setDrawerScreen(null)} />}
+          
           {drawerScreen === 'legal' && <LegalScreen onClose={() => setDrawerScreen(null)} />}
           {drawerScreen === 'titan-ai' && <TitanAIScreen onBack={() => setDrawerScreen(null)} />}
           {drawerScreen === 'titan-nearby' && <TitanNearbyScreen onBack={() => setDrawerScreen(null)} />}

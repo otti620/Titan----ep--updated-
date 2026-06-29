@@ -176,49 +176,62 @@ const TransactionHistoryScreen = ({ onBack, onSelectTransaction }: { onBack: () 
   };
 
   return (
-    <div className="h-full w-full bg-background flex flex-col relative">
-      {/* iOS Navigation Bar (Inline title, frosted glass) */}
+    <div className="h-full w-full bg-[#FAFAFA] dark:bg-[#0A0A0A] flex flex-col relative overflow-hidden">
+      {/* Decorative Titan Pulse Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+      
+      {/* Navigation Bar */}
       <div className={cn(
         "px-5 pt-[env(safe-area-inset-top,14px)] pb-3 flex justify-between items-center sticky top-0 z-30 transition-all duration-300",
         isCollapsed ? "ios-glass ios-hairline-bottom" : "bg-transparent"
       )}>
-        <button onClick={onBack} className="text-indigo-500 flex flex-row items-center gap-1 active:opacity-60 transition-opacity z-10 w-20">
-          <ArrowLeft size={22} strokeWidth={2} /> 
-          <span className="subheadline">Back</span>
+        <button onClick={onBack} className="text-foreground/80 flex flex-row items-center gap-1 active:opacity-60 transition-opacity z-10 w-20">
+          <ArrowLeft size={22} strokeWidth={2.5} /> 
+          <span className="text-[15px] font-bold tracking-tight">Back</span>
         </button>
         
         <div className={cn(
            "absolute left-1/2 -translate-x-1/2 transition-opacity duration-300 text-center pointer-events-none",
            isCollapsed ? "opacity-100" : "opacity-0"
         )}>
-           <span className="headline text-foreground">Activity</span>
+           <span className="text-[13px] font-black uppercase tracking-[0.2em] text-foreground">Activity</span>
         </div>
 
         <div className="z-10 w-20 flex justify-end">
            <button 
              onClick={() => { hapticFeedback('light'); setShowExportSheet(true); }}
-             className="text-indigo-500 active:opacity-60 transition-opacity subheadline flex items-center gap-1"
+             className="text-indigo-500 active:opacity-60 transition-opacity text-[13px] font-black uppercase tracking-wider flex items-center gap-1"
            >
              Export
            </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
-        <div className="px-5 pt-2 pb-2">
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-12 relative z-10">
+        <div className="px-5 pt-2 pb-4">
            <div ref={sentinelRef} className="h-1 w-full" />
-           {/* iOS Large Title */}
-           <h1 className="large-title text-foreground mb-4">Activity</h1>
+           {/* Nothing-style Title */}
+           <div className="mb-6 relative">
+             <h1 className="text-[32px] font-black text-foreground tracking-tighter leading-none mb-1">Transaction Ledger</h1>
+             <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest opacity-40">Architected Wealth Index</span>
+                <div className="flex gap-[3px] opacity-10">
+                   {[...Array(8)].map((_, i) => (
+                     <div key={i} className="w-[3px] h-[3px] rounded-full bg-foreground" />
+                   ))}
+                </div>
+             </div>
+           </div>
 
-          {/* iOS Rounded Search Bar with Date Funnel option */}
-          <div className="flex gap-2 mb-4">
-            <div className="relative flex-1">
+          {/* Premium Glassmorphic Search Bar */}
+          <div className="flex gap-2 mb-6">
+            <div className="relative flex-1 group">
               <div className={cn(
                 "absolute inset-y-0 flex items-center transition-all duration-300 pointer-events-none",
-                isFocused || searchQuery ? "left-3" : "left-1/2 -translate-x-1/2 -ml-10"
+                isFocused || searchQuery ? "left-4" : "left-1/2 -translate-x-1/2 -ml-10"
               )}>
-                <Search size={16} strokeWidth={2} className={cn("transition-colors", isFocused ? "text-foreground" : "text-muted-foreground")} />
-                {!isFocused && !searchQuery && <span className="ml-[6px] text-muted-foreground subheadline">Search</span>}
+                <Search size={16} strokeWidth={2.5} className={cn("transition-colors", isFocused ? "text-indigo-500" : "text-muted-foreground/50")} />
+                {!isFocused && !searchQuery && <span className="ml-[8px] text-muted-foreground/50 text-[14px] font-medium">Search Ledger</span>}
               </div>
               <input 
                 type="text" 
@@ -226,63 +239,63 @@ const TransactionHistoryScreen = ({ onBack, onSelectTransaction }: { onBack: () 
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-black/5 dark:bg-white/10 border-none rounded-[10px] py-[7px] px-8 text-foreground subheadline focus:ring-0 transition-all"
+                className="w-full bg-white/50 dark:bg-white/5 backdrop-blur-md border border-black/5 dark:border-white/10 rounded-[18px] py-3 px-10 text-foreground text-[14px] font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/30 transition-all outline-none"
               />
             </div>
             
             <button 
               onClick={() => { hapticFeedback('light'); setShowDateFilter(!showDateFilter); }}
               className={cn(
-                "p-2 rounded-[10px] flex items-center justify-center transition-colors border",
+                "w-12 h-12 rounded-[18px] flex items-center justify-center transition-all duration-300 border backdrop-blur-md",
                 showDateFilter || startDate || endDate 
-                  ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" 
-                  : "bg-black/5 dark:bg-white/10 border-transparent text-muted-foreground"
+                  ? "bg-indigo-500 text-white border-indigo-400 shadow-lg shadow-indigo-500/20" 
+                  : "bg-white/50 dark:bg-white/5 border-black/5 dark:border-white/10 text-muted-foreground"
               )}
               title="Filter by Date"
             >
-              <Calendar size={18} strokeWidth={2} />
+              <Calendar size={18} strokeWidth={2.5} />
             </button>
           </div>
 
-          {/* Collapsible iOS-like date range filter card */}
+          {/* Collapsible date range filter card */}
           <AnimatePresence>
             {showDateFilter && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden mb-4"
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden mb-6"
               >
-                <div className="bg-black/5 dark:bg-white/5 border border-border/40 rounded-[14px] p-3 space-y-3 shadow-inner">
-                  <div className="flex items-center justify-between">
-                    <span className="caption-1 font-semibold text-muted-foreground uppercase tracking-wider">Filter Date Range</span>
+                <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-[24px] p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Temporal Filter</span>
                     {(startDate || endDate) && (
                       <button 
                         onClick={() => { hapticFeedback('light'); setStartDate(''); setEndDate(''); }}
-                        className="text-[11px] font-bold text-red-500 active:opacity-60"
+                        className="text-[10px] font-black uppercase tracking-wider text-red-500 hover:opacity-60 transition-opacity"
                       >
-                        Reset Dates
+                        Reset Temporal Range
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="caption-2 text-muted-foreground block mb-1">Start Date</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Initiation</label>
                       <input 
                         type="date"
                         value={startDate}
                         onChange={(e) => { hapticFeedback('light'); setStartDate(e.target.value); }}
-                        className="w-full bg-background border border-border/60 rounded-[8px] py-1.5 px-2 text-xs text-foreground focus:border-indigo-500 focus:ring-0"
+                        className="w-full bg-white/50 dark:bg-black/20 border border-black/5 dark:border-white/10 rounded-[14px] py-2.5 px-3 text-[13px] text-foreground outline-none focus:border-indigo-500/30 transition-all"
                       />
                     </div>
-                    <div>
-                      <label className="caption-2 text-muted-foreground block mb-1">End Date</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Termination</label>
                       <input 
                         type="date"
                         value={endDate}
                         onChange={(e) => { hapticFeedback('light'); setEndDate(e.target.value); }}
-                        className="w-full bg-background border border-border/60 rounded-[8px] py-1.5 px-2 text-xs text-foreground focus:border-indigo-500 focus:ring-0"
+                        className="w-full bg-white/50 dark:bg-black/20 border border-black/5 dark:border-white/10 rounded-[14px] py-2.5 px-3 text-[13px] text-foreground outline-none focus:border-indigo-500/30 transition-all"
                       />
                     </div>
                   </div>
@@ -298,10 +311,10 @@ const TransactionHistoryScreen = ({ onBack, onSelectTransaction }: { onBack: () 
                 key={cat}
                 onClick={() => { hapticFeedback('light'); setSelectedCategory(cat); }}
                 className={cn(
-                  "px-4 py-1.5 rounded-full subheadline whitespace-nowrap transition-all duration-200 ios-spring active:scale-95",
+                  "px-5 py-2 rounded-[14px] text-[12px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 active:scale-95 border backdrop-blur-md",
                   selectedCategory === cat 
-                    ? "bg-foreground text-background font-semibold shadow-sm" 
-                    : "bg-black/5 dark:bg-white/10 text-foreground"
+                    ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/20" 
+                    : "bg-white/50 dark:bg-white/5 border-black/5 dark:border-white/10 text-muted-foreground"
                 )}
               >
                 {cat}
@@ -463,16 +476,23 @@ const SwipeableTransactionItem = ({ tx, onClick, onReport, isLast }: { tx: Trans
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
 
+  // Nothing-inspired "Titan Pulse" indicator for recent transactions
+  const isRecent = new Date().getTime() - new Date(tx.created_at).getTime() < 3600000; // 1 hour
+
   return (
-    <div className={cn("relative bg-card overflow-hidden", !isLast && "ios-hairline-bottom")}>
+    <div className={cn(
+      "relative mb-2 overflow-hidden rounded-[18px] transition-all duration-300",
+      "bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10",
+      "shadow-[0_4px_12px_rgba(0,0,0,0.03)] dark:shadow-none hover:bg-white/60 dark:hover:bg-white/10"
+    )}>
       <div className="absolute inset-0 flex justify-end items-center px-6 gap-4 bg-black/5 dark:bg-white/5">
         <button className="flex flex-col items-center gap-1 text-indigo-500">
           <Repeat size={20} strokeWidth={1.5} />
-          <span className="caption-1">Repeat</span>
+          <span className="caption-1 font-mono uppercase tracking-tighter">Repeat</span>
         </button>
         <button onClick={onReport} className="flex flex-col items-center gap-1 text-red-500 active:scale-95 transition-transform">
           <AlertTriangle size={20} strokeWidth={1.5} />
-          <span className="caption-1">Report</span>
+          <span className="caption-1 font-mono uppercase tracking-tighter">Report</span>
         </button>
       </div>
 
@@ -482,29 +502,59 @@ const SwipeableTransactionItem = ({ tx, onClick, onReport, isLast }: { tx: Trans
         dragConstraints={{ left: -160, right: 0 }}
         dragElastic={0.1}
         onClick={onClick}
-        className="relative w-full p-4 flex items-center justify-between bg-card active:bg-black/5 dark:active:bg-white/5 transition-colors text-left z-10"
+        className="relative w-full p-4 flex items-center justify-between bg-transparent active:bg-black/5 dark:active:bg-white/5 transition-colors text-left z-10"
       >
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            "w-[40px] h-[40px] rounded-full flex items-center justify-center border border-border",
-            tx.type === 'in' ? "bg-green-500/10 text-green-500" : "bg-black/5 dark:bg-white/10 text-foreground"
-          )}>
-            {tx.type === 'in' ? <ArrowDownLeft size={20} strokeWidth={1.5} /> : <ArrowUpRight size={20} strokeWidth={1.5} />}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className={cn(
+              "w-[44px] h-[44px] rounded-[14px] flex items-center justify-center border transition-all duration-500",
+              tx.type === 'in' 
+                ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                : "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
+            )}>
+              {tx.type === 'in' ? <ArrowDownLeft size={22} strokeWidth={1.5} /> : <ArrowUpRight size={22} strokeWidth={1.5} />}
+            </div>
+            {isRecent && (
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className={cn(
+                  "absolute -inset-1 rounded-[16px] border opacity-20",
+                  tx.type === 'in' ? "border-green-500" : "border-indigo-500"
+                )}
+              />
+            )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <div className={cn("w-2 h-2 rounded-full", tx.status === 'successful' ? 'bg-green-500' : 'bg-orange-500')} />
-              <h4 className="subheadline font-semibold text-foreground">{tx.title}</h4>
+            <div className="flex items-center gap-2 mb-0.5">
+              <h4 className="text-[15px] font-bold text-foreground tracking-tight">{tx.title}</h4>
+              {tx.status === 'pending' && (
+                <div className="px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-[8px] font-black uppercase text-amber-600 tracking-widest">Pending</span>
+                </div>
+              )}
             </div>
-            <p className="footnote text-muted-foreground ml-4">{tx.time}</p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-mono uppercase text-muted-foreground tracking-tighter bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded-sm">
+                {tx.category || 'Payment'}
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground/60">{tx.time}</span>
+            </div>
           </div>
         </div>
-        <p className={cn(
-          "callout font-semibold tabular-nums tracking-tight",
-          tx.type === 'in' ? "text-green-500" : "text-foreground"
-        )}>
-          {tx.type === 'in' ? '+' : '-'}₦{tx.amount.toLocaleString()}
-        </p>
+        <div className="text-right">
+          <p className={cn(
+            "text-[16px] font-black tabular-nums tracking-tighter font-mono",
+            tx.type === 'in' ? "text-green-500" : "text-foreground"
+          )}>
+            {tx.type === 'in' ? '+' : '-'}₦{tx.amount.toLocaleString()}
+          </p>
+          <div className="flex justify-end gap-[2px] mt-1 opacity-20">
+             {[...Array(5)].map((_, i) => (
+               <div key={i} className="w-[2px] h-[2px] rounded-full bg-foreground" />
+             ))}
+          </div>
+        </div>
       </motion.button>
     </div>
   );

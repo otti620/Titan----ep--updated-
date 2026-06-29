@@ -40,14 +40,29 @@ const CircleDetailsScreen = ({ circle, onBack, onSelectSlot }: { circle: any, on
   }, []);
 
   const fetchSlots = async () => {
+    if (!circle?.id) return;
     const data = await getCircleSlots(circle.id);
     setSlots(data);
     setIsLoading(false);
   };
 
   useEffect(() => {
-    fetchSlots();
-  }, [circle.id, getCircleSlots]);
+    if (circle?.id) {
+      fetchSlots();
+    }
+  }, [circle?.id, getCircleSlots]);
+
+  if (!circle) {
+    return (
+      <div className="h-full w-full flex items-center justify-center p-8 text-center bg-background">
+        <div className="space-y-4">
+          <Loader2 size={48} className="mx-auto text-indigo-500 animate-spin" />
+          <h3 className="font-bold">Syncing Circle Metadata...</h3>
+          <button onClick={onBack} className="px-6 py-2 bg-indigo-500 text-white rounded-full text-xs font-bold uppercase tracking-widest">Return</button>
+        </div>
+      </div>
+    );
+  }
 
   const userSlot = slots.find(s => s.user_id === profile?.id);
   const firstUnpaid = slots.findIndex(s => s.status !== 'paid');

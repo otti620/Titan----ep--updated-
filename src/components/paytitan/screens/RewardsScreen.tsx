@@ -23,7 +23,7 @@ const WHEEL_SECTIONS = [
 ];
 
 export default function RewardsScreen() {
-  const { profile, fundUserWallet, showNotification } = usePayTitan();
+  const { profile, fundUserWallet, showNotification, mysteryBoxes, claimMysteryBox } = usePayTitan();
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinRotation, setSpinRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SECTIONS[0] | null>(null);
@@ -157,6 +157,44 @@ export default function RewardsScreen() {
              <p className="footnote text-zinc-400 mt-1 max-w-xs mx-auto">
                Spin the active Lava Wheel to win micro-yield dividends directly. Boost your transactions with instant nano-rebates!
              </p>
+          </div>
+
+          {/* 3.5 Mystery Rewards (Mystery Boxes) */}
+          <div className="space-y-4">
+             <div className="flex items-center justify-between px-1">
+                <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Mystery Nodes</h4>
+                <span className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Tap to Reveal</span>
+             </div>
+             
+             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                {mysteryBoxes.length > 0 ? (
+                  mysteryBoxes.map((box: any) => (
+                    <motion.button
+                      key={box.id}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={async () => {
+                        hapticFeedback('heavy');
+                        const reward = await claimMysteryBox(box.id);
+                        toast.success(reward.title, { description: reward.message });
+                      }}
+                      className="w-32 h-32 shrink-0 glass-card rounded-[32px] border-2 border-dashed border-amber-500/30 flex flex-col items-center justify-center gap-2 group relative overflow-hidden"
+                    >
+                       <div className="absolute inset-0 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors" />
+                       <motion.div
+                         animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                         transition={{ repeat: Infinity, duration: 2 }}
+                       >
+                         <Gift size={32} className="text-amber-500" />
+                       </motion.div>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">{box.title}</span>
+                    </motion.button>
+                  ))
+                ) : (
+                  <div className="w-full p-8 text-center glass-card rounded-[32px] border-dashed border-white/10 opacity-40">
+                     <p className="text-[11px] font-black uppercase tracking-widest">No Active Boxes</p>
+                  </div>
+                )}
+             </div>
           </div>
 
           {/* 4. THE INTERACTIVE LIQUID SPIN WHEEL */}

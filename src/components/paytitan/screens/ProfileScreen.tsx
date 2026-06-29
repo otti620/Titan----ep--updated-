@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { 
   User, Shield, Bell, CreditCard, HelpCircle, LogOut, 
   ChevronRight, Smartphone, Lock, Users, Star, FileText, 
-  CheckCircle2, AlertCircle, Settings2, Globe, ShieldAlert, Sparkles, TrendingUp, PieChart
+  CheckCircle2, AlertCircle, Settings2, Globe, ShieldAlert, Sparkles, TrendingUp, PieChart, Award
 } from 'lucide-react';
 import { usePayTitan } from '../../../context/PayTitanContext';
 import { hapticFeedback, cn } from '../../../lib/utils';
@@ -167,6 +167,37 @@ export default function ProfileScreen({
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <p className="px-4 footnote text-muted-foreground uppercase tracking-widest">Titan Ecosystem</p>
+          <div className="ios-list-group">
+            <SettingsRow 
+              label="Titan Mission" 
+              icon={Globe} 
+              color="text-indigo-500" 
+              onClick={() => onNavigate('mission')} 
+            />
+            <SettingsRow 
+              label="Titan Audit" 
+              icon={ShieldAlert} 
+              color="text-emerald-500" 
+              onClick={() => onNavigate('audit')} 
+            />
+            <SettingsRow 
+              label="Titan Forest" 
+              icon={TrendingUp} 
+              color="text-green-500" 
+              onClick={() => onNavigate('forest')} 
+            />
+            <SettingsRow 
+              label="Leaderboards" 
+              icon={Award} 
+              color="text-amber-500" 
+              onClick={() => onNavigate('leaderboard')} 
+              isLast
+            />
           </div>
         </div>
 

@@ -71,37 +71,44 @@ const PaymentsScreen = ({ onBack, onNavigate }: PaymentsScreenProps) => {
       <div className="flex-1 overflow-y-auto pb-32 no-scrollbar">
         <div className="px-5 pt-2 pb-2">
            <div ref={sentinelRef} className="h-1 w-full" />
-           <h1 className="large-title text-foreground mb-4">PayTitan</h1>
+           <h1 className="text-[32px] font-black text-foreground tracking-tighter leading-none italic mb-1">Titan Protocol</h1>
+           <p className="text-[14px] text-muted-foreground font-medium mb-6">Financial orchestration nodes.</p>
         </div>
 
-        <div className="px-5 space-y-8">
+        <div className="px-5 space-y-10">
           {/* Payment Section */}
           <div className="space-y-4">
-            <h3 className="footnote text-muted-foreground uppercase tracking-widest pl-1">Payment</h3>
-            <div className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[28px] p-5 text-foreground shadow-sm">
-              <div className="grid grid-cols-4 gap-y-6 gap-x-2">
-                <GridItem icon={<Send className="text-blue-500" />} label="Transfer" onClick={() => onNavigate('bank-transfer')} />
-                <GridItem icon={<Users2 className="text-pink-500" />} label="Contacts" onClick={() => onNavigate('contacts')} />
-                <GridItem icon={<Wallet className="text-orange-500" />} label="Wallets" onClick={() => onNavigate('topup')} />
-                <GridItem icon={<RefreshCw className="text-yellow-500" />} label="Convert" onClick={() => {
+            <div className="flex items-center justify-between px-1">
+               <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Transaction Nodes</h3>
+               <div className="flex gap-1 opacity-20">
+                 {[...Array(4)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-foreground" />)}
+               </div>
+            </div>
+            
+            <div className="glass-card rounded-[40px] p-8">
+              <div className="grid grid-cols-4 gap-y-10 gap-x-2">
+                <GridItem icon={<Send className="text-indigo-500" />} label="Transfer" onClick={() => onNavigate('bank-transfer')} />
+                <GridItem icon={<Users2 className="text-foreground" />} label="Contacts" onClick={() => onNavigate('contacts')} />
+                <GridItem icon={<Wallet className="text-foreground" />} label="Wallets" onClick={() => onNavigate('topup')} />
+                <GridItem icon={<RefreshCw className="text-indigo-500" />} label="Convert" onClick={() => {
                   hapticFeedback('medium');
-                  toast.info("Convert & Swap Under Review", {
-                    description: "Multi-currency swap is currently undergoing FX regulatory clearance with our BaaS partner."
+                  toast.info("Convert Node Under Audit", {
+                    description: "Multi-currency swap protocols are currently undergoing FX architectural verification."
                   });
                 }} />
                 <GridItem icon={<HandCoins className="text-emerald-500" />} label="Request" onClick={() => onNavigate('request-money')} />
                 
-                <GridItem icon={<AtSign className="text-blue-400" />} label="Pay Tag" onClick={() => onNavigate('transfer')} />
-                <GridItem icon={<Phone className="text-purple-600" />} label="Airtime" onClick={() => onNavigate('airtime')} />
-                <GridItem icon={<Rss className="text-yellow-500" />} label="Data" onClick={() => onNavigate('data')} />
-                <GridItem icon={<FileText className="text-indigo-500" />} label="Bills" onClick={() => onNavigate('bills')} />
+                <GridItem icon={<AtSign className="text-indigo-400" />} label="Pay Tag" onClick={() => onNavigate('transfer')} />
+                <GridItem icon={<Phone className="text-foreground" />} label="Mobile" onClick={() => onNavigate('airtime')} />
+                <GridItem icon={<Rss className="text-foreground" />} label="Data" onClick={() => onNavigate('data')} />
+                <GridItem icon={<FileText className="text-foreground" />} label="Bills" onClick={() => onNavigate('bills')} />
                 
-                <GridItem icon={<Calendar className="text-slate-500" />} label="History" onClick={() => onNavigate('history')} />
-                <GridItem icon={<Sparkles className="text-indigo-500" />} label="OTC Nearby" onClick={() => onNavigate('titan-nearby')} />
+                <GridItem icon={<Calendar className="text-muted-foreground" />} label="Ledger" onClick={() => onNavigate('history')} />
+                <GridItem icon={<Sparkles className="text-amber-500" />} label="Nearby" onClick={() => onNavigate('titan-nearby')} />
                 <GridItem icon={<FileCheck className="text-emerald-600" />} label="Invoice" onClick={() => {
                   hapticFeedback('medium');
-                  toast.info("Invoice System Coming Soon", {
-                    description: "Merchant invoicing rails are undergoing corporate compliance underwriting and will launch soon."
+                  toast.info("Invoicing Under Synthesis", {
+                    description: "Merchant invoicing protocols are being synthesized and will launch in the next cycle."
                   });
                 }} />
                 <GridItem icon={<Megaphone className="text-red-500" />} label="Referral" onClick={() => onNavigate('referral')} />
@@ -109,24 +116,29 @@ const PaymentsScreen = ({ onBack, onNavigate }: PaymentsScreenProps) => {
             </div>
           </div>
 
-          {/* Others Section */}
+          {/* Social Engineering Section */}
           <div className="space-y-4">
-            <h3 className="footnote text-muted-foreground uppercase tracking-widest pl-1">Others</h3>
-            <div className="flex gap-3">
+            <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] px-1">Social Engineering</h3>
+            <div className="flex gap-4">
               <div className="w-1/4">
-                <GridItem standalone icon={<Link2 className="text-blue-500" />} label="BioHub" onClick={() => {
+                <GridItem standalone icon={<Link2 className="text-indigo-500" />} label="BioHub" onClick={() => {
                   hapticFeedback('medium');
-                  toast.info("BioHub Identity Coming Soon", {
-                    description: "Decentralized digital profile verification is pending technical partner clearance."
+                  toast.info("BioHub Verification Pending", {
+                    description: "Decentralized identity verification is pending partner node clearance."
                   });
                 }} />
               </div>
-              <div className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[22px] p-5 flex items-center justify-between relative overflow-hidden shadow-sm active:scale-[0.97] transition-transform ios-spring">
-                <div className="relative z-10">
-                  <p className="text-white subheadline font-semibold leading-tight mb-1">PayTitan has more<br />in store for you</p>
-                  <p className="text-white/80 caption-1">More features coming soon!</p>
+              <div className="flex-1 glass-card rounded-[32px] p-6 flex items-center justify-between relative overflow-hidden group active:scale-[0.98] transition-all">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                   <Rocket size={80} strokeWidth={1} />
                 </div>
-                <Rocket className="text-white/20 absolute -right-2 -bottom-2 w-16 h-16 rotate-12" strokeWidth={1.5} />
+                <div className="relative z-10">
+                  <p className="text-foreground text-[16px] font-black italic uppercase leading-tight mb-1">Architect<br />Your Wealth</p>
+                  <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-widest">Protocol v2.4 Active</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                   <ChevronRight size={20} strokeWidth={2.5} />
+                </div>
               </div>
             </div>
           </div>

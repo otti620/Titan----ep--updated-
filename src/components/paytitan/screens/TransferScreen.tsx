@@ -387,10 +387,37 @@ export default function TransferScreen({ onBack, initialHandle }: TransferScreen
       </div>
 
       {isProcessing && (
-        <div className="absolute inset-0 z-50 bg-[#1A2130]/90 backdrop-blur-md flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="w-12 h-12 text-[#FF4D1C] animate-spin" strokeWidth={2.5} />
-          <p className="text-white text-lg font-bold tracking-tight">Securing Transfer...</p>
-          <p className="text-white/40 text-xs font-mono uppercase tracking-wider">PayTitan Cryptographic Verification</p>
+        <div className="absolute inset-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-2xl flex flex-col items-center justify-center p-8 text-center">
+          <div className="relative mb-12">
+             <div className="w-24 h-24 rounded-[32px] bg-indigo-500/10 flex items-center justify-center relative z-10">
+                <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" strokeWidth={2.5} />
+             </div>
+             {/* Fueling Glows */}
+             <div className="absolute inset-0 bg-indigo-500/20 blur-[40px] rounded-full fueling-animation" />
+             <div className="absolute inset-[-20px] border border-indigo-500/10 rounded-[40px] animate-pulse" />
+          </div>
+          
+          <div className="space-y-4 max-w-xs">
+            <h2 className="text-[28px] font-black text-white italic tracking-tighter leading-none italic uppercase">Fueling Node...</h2>
+            <p className="text-[14px] font-medium text-white/60 leading-relaxed">
+               Establishing cryptographic consensus across 124 Titan architectural nodes.
+            </p>
+          </div>
+
+          <div className="absolute bottom-12 left-12 right-12">
+             <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Protocol Progress</span>
+                <span className="text-[10px] font-mono text-indigo-400">0x74...f92</span>
+             </div>
+             <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 3, ease: "easeInOut" }}
+                  className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+                />
+             </div>
+          </div>
         </div>
       )}
     </div>

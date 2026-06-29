@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, Bell, QrCode, Plus, Send, RefreshCw,
   MoreHorizontal, ChevronDown, History, Phone, Rss,
-  FileText, HandCoins, LayoutGrid, ShieldCheck, AtSign, PiggyBank, AlertTriangle, WifiOff, X, ArrowDownToLine, Sparkles, Building2, Store, Link2, Receipt, Users, ChevronRight, Brain, TrendingUp, UserCheck, Gift, Target, Zap, Shield, Search, SearchX, Clock
+  FileText, HandCoins, LayoutGrid, ShieldCheck, AtSign, PiggyBank, AlertTriangle, WifiOff, X, ArrowDownToLine, Sparkles, Building2, Store, Link2, Receipt, Users, ChevronRight, Brain, TrendingUp, UserCheck, Gift, Target, Zap, Shield, Search, SearchX, Clock, Activity, Trees, Trophy, Sprout
 } from 'lucide-react';
 
 import { usePayTitan } from '../../../context/PayTitanContext';
@@ -24,7 +24,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { 
     profile, balance, transactions, privacy, updatePrivacy, settings, broadcasts, 
     isMerchantMode, toggleMerchantMode, usdBalance, gbpBalance, isInstallable, 
-    installApp, contacts, vaults, isLoading, refreshData, networkStatus, isProcessing 
+    installApp, contacts, vaults, isLoading, refreshData, networkStatus, isProcessing,
+    titanScore, titanForestCount 
   } = usePayTitan();
   const [currency, setCurrency] = useState<'NGN' | 'USD' | 'GBP'>('NGN');
   const [searchQuery, setSearchQuery] = useState('');
@@ -261,157 +262,214 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
       {/* Main Content Area */}
       <div className="flex-1 px-5 space-y-9 pb-32 relative z-20 bg-background pt-6 no-scrollbar">
         
-        {/* Search Bar - Global Search Readiness */}
+        {/* Search Bar - Premium Glass Upgrade */}
         {!isMerchantMode && (
-          <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+          <div className="relative group">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30 group-focus-within:text-indigo-500 transition-colors" />
             <input 
               type="text" 
-              placeholder="Search transactions, bills, or help..."
+              placeholder="Search nodes, bills, or protocols..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 bg-muted/20 dark:bg-white/5 rounded-2xl pl-12 pr-4 text-[15px] outline-none focus:ring-2 ring-indigo-500/20 transition-all font-medium"
+              className="w-full h-14 bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-[22px] pl-12 pr-4 text-[15px] outline-none focus:ring-4 ring-indigo-500/10 transition-all font-medium"
             />
           </div>
         )}
 
-        {/* 1. Core Utilities Grid - High Priority Shortcuts */}
+        {/* 1. Titan Ecosystem Bento Hub */}
         {!isMerchantMode && (
-          <div className="grid grid-cols-4 gap-3">
-             <ShortcutItem 
-                label="Airtime" 
-                icon={<Phone className="text-foreground" />} 
-                onClick={() => onNavigate('airtime')} 
-                animateType="bounce"
-                badge="HOT"
-             />
-             <ShortcutItem 
-                label="Data" 
-                icon={<Rss className="text-foreground" />} 
-                onClick={() => onNavigate('data')} 
-                animateType="pulse"
-                badge="HOT"
-             />
-             <ShortcutItem 
-                label="Electricity" 
-                icon={<Zap className="text-foreground" />} 
-                onClick={() => onNavigate('electricity')} 
-                animateType="bounce"
-             />
-             <ShortcutItem 
-                label="Gaming" 
-                icon={<Target className="text-foreground" />} 
-                onClick={() => onNavigate('betting')} 
-                animateType="roll"
-                badge="HOT"
-             />
-          </div>
-        )}
-
-        {/* Insights & Growth Bento Hub */}
-        {!isMerchantMode && (
-          <div className="space-y-3">
-            <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-[0.06em] px-3">Account Standing</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-3">
+              <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Titan Ecosystem</h3>
+              <div className="flex gap-1 opacity-20">
+                {[...Array(4)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-foreground" />)}
+              </div>
+            </div>
             
             <div className="grid grid-cols-2 gap-3">
-              {/* Success Score widget */}
+              {/* Titan Score (Financial Health Meter) */}
               <motion.div 
                  whileTap={{ scale: 0.97 }}
                  onClick={() => onNavigate('kyc')}
-                 className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[22px] p-4 text-foreground shadow-sm flex flex-col gap-2 ios-ease transition-transform duration-200"
+                 className="glass-card rounded-[32px] p-5 flex flex-col gap-4 relative overflow-hidden group"
               >
-                 <div className="flex justify-between items-center">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                      <ShieldCheck size={16} strokeWidth={2} />
-                    </div>
-                    <span className="text-[17px] font-semibold text-foreground">{financialScore}</span>
+                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Activity size={40} strokeWidth={1} />
+                 </div>
+                 <div className="titan-pulse w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-500">
+                    <ShieldCheck size={20} strokeWidth={2.5} />
                  </div>
                  <div>
-                    <p className="text-[12px] font-medium text-muted-foreground">Financial Standing</p>
-                    <p className="text-[13px] text-foreground font-semibold mt-0.5">{profile?.kyc_level === 3 ? 'Elite' : profile?.kyc_level === 2 ? 'Premier' : 'Standard'}</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Titan Score</p>
+                    <div className="flex items-baseline gap-1">
+                       <span className="text-[24px] font-black text-foreground tracking-tighter leading-none italic">{titanScore}</span>
+                       <span className="text-[10px] font-bold text-emerald-500">+12</span>
+                    </div>
                  </div>
               </motion.div>
 
-              {/* Rewards / Daily Earn */}
+              {/* Titan Forest Counter */}
               <motion.div 
                 whileTap={{ scale: 0.97 }}
-                onClick={() => onNavigate('rewards')}
-                className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[22px] p-4 text-foreground shadow-sm flex flex-col gap-2 ios-ease transition-transform duration-200"
+                onClick={() => onNavigate('forest')}
+                className="glass-card rounded-[32px] p-5 flex flex-col gap-4 relative overflow-hidden group"
               >
-                 <div className="flex justify-between items-center">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                      <Gift size={16} strokeWidth={2} />
-                    </div>
-                    <span className="text-[17px] font-semibold text-foreground">₦{dailyYield}</span>
+                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Trees size={40} strokeWidth={1} />
+                 </div>
+                 <div className="titan-pulse w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500">
+                    <Sprout size={20} strokeWidth={2.5} />
                  </div>
                  <div>
-                    <p className="text-[12px] font-medium text-muted-foreground">Daily Reward</p>
-                    <p className="text-[13px] text-foreground font-semibold mt-0.5">{dailyYield > 0 ? 'Active' : 'Claim Now'}</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Titan Forest</p>
+                    <div className="flex items-baseline gap-1">
+                       <span className="text-[24px] font-black text-foreground tracking-tighter leading-none italic">{titanForestCount}</span>
+                       <span className="text-[12px] font-bold text-muted-foreground ml-1">Trees</span>
+                    </div>
+                 </div>
+              </motion.div>
+
+              {/* Community Leaderboard */}
+              <motion.div 
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onNavigate('leaderboard')}
+                className="glass-card rounded-[32px] p-5 flex flex-col gap-4 col-span-2 relative overflow-hidden group"
+              >
+                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Trophy size={60} strokeWidth={1} />
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                       <div className="titan-pulse w-10 h-10 rounded-full bg-amber-500/10 text-amber-500">
+                          <Trophy size={20} strokeWidth={2.5} />
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">The Top Titans</p>
+                          <p className="text-[16px] font-black text-foreground italic leading-none">Global Rankings</p>
+                       </div>
+                    </div>
+                    <div className="flex -space-x-3 pr-2">
+                       {[1, 2, 3].map(i => (
+                         <div key={i} className="w-8 h-8 rounded-full border-2 border-background overflow-hidden bg-muted">
+                           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Titan${i}`} alt="Avatar" />
+                         </div>
+                       ))}
+                    </div>
                  </div>
               </motion.div>
             </div>
           </div>
         )}
 
-        {/* Dynamic Updates Feed */}
+        {/* 2. Core Utilities - Premium Shortcuts */}
         {!isMerchantMode && (
-          <div className="space-y-3">
+          <div className="space-y-4">
+             <div className="flex items-center justify-between px-3">
+               <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Core Utilities</h3>
+               <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Architect Mode</span>
+             </div>
+             <div className="grid grid-cols-4 gap-3">
+                <ShortcutItem label="Mobile" icon={<Phone />} onClick={() => onNavigate('airtime')} badge="HOT" />
+                <ShortcutItem label="Energy" icon={<Zap />} onClick={() => onNavigate('electricity')} />
+                <ShortcutItem label="Gaming" icon={<Target />} onClick={() => onNavigate('betting')} badge="NEW" />
+                <ShortcutItem label="Vaults" icon={<PiggyBank />} onClick={() => onNavigate('vaults')} />
+             </div>
+          </div>
+        )}
+
+        {/* 3. Social Nodes & Split Bill */}
+        {!isMerchantMode && (
+          <div className="space-y-4">
+             <div className="flex items-center justify-between px-3">
+               <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Social Nodes</h3>
+               <button onClick={() => onNavigate('contacts')} className="text-[12px] font-black text-indigo-500 uppercase tracking-widest">Invite Titans</button>
+             </div>
+             
+             <div className="glass-card rounded-[32px] p-5">
+                <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2">
+                   <button className="flex flex-col items-center gap-2 shrink-0 group">
+                      <div className="w-14 h-14 rounded-[20px] bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                         <Plus size={24} strokeWidth={2.5} />
+                      </div>
+                      <span className="text-[11px] font-bold text-foreground">Add Node</span>
+                   </button>
+                   {contacts.slice(0, 5).map(contact => (
+                      <button key={contact.id} onClick={() => onNavigate('bank-transfer')} className="flex flex-col items-center gap-2 shrink-0">
+                         <div className="w-14 h-14 rounded-[20px] overflow-hidden border-2 border-transparent hover:border-indigo-500/50 transition-all">
+                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.username}`} alt={contact.username} className="w-full h-full object-cover" />
+                         </div>
+                         <span className="text-[11px] font-bold text-foreground truncate w-14">@{contact.username}</span>
+                      </button>
+                   ))}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* 4. Dynamic Updates Feed */}
+        {!isMerchantMode && (
+          <div className="space-y-4">
             <div className="flex items-center justify-between px-3">
-              <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">Ledger Activity</h3>
+              <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Immutable Ledger</h3>
               <button 
                 onClick={() => onNavigate('history')}
-                className="text-[15px] font-semibold text-indigo-500"
+                className="text-[12px] font-black text-indigo-500 uppercase tracking-widest"
               >
-                Review all
+                Full Access
               </button>
             </div>
             
-            <div className="bg-white/20 dark:bg-white/5 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-[28px] overflow-hidden shadow-sm">
+            <div className="glass-card rounded-[32px] overflow-hidden">
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.slice(0, 4).map((tx, idx) => (
-                    <button key={tx.id} onClick={() => onNavigate(`tx-${tx.id}`)} className={cn("flex w-full items-center justify-between p-3 active:bg-black/5 dark:active:bg-white/5 transition-colors", (idx !== filteredTransactions.slice(0, 4).length - 1) && "ios-hairline-bottom")}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-foreground">
-                              {tx.type === 'in' ? <ArrowDownToLine size={20} strokeWidth={1.5} /> : <Send size={20} strokeWidth={1.5} />}
+                    <button key={tx.id} onClick={() => onNavigate(`tx-${tx.id}`)} className={cn("flex w-full items-center justify-between p-4 active:bg-black/5 dark:active:bg-white/5 transition-colors", (idx !== filteredTransactions.slice(0, 4).length - 1) && "border-b border-black/5 dark:border-white/5")}>
+                        <div className="flex items-center gap-4">
+                          <div className="w-11 h-11 rounded-[16px] bg-black/5 dark:bg-white/10 flex items-center justify-center text-foreground relative">
+                              {tx.type === 'in' ? <ArrowDownToLine size={20} strokeWidth={2} /> : <Send size={20} strokeWidth={2} />}
+                              {idx === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full border-2 border-background animate-pulse" />}
                           </div>
                           <div className="text-left">
-                              <p className="subheadline font-medium text-foreground">{tx.title}</p>
-                              <p className="footnote text-muted-foreground capitalize">{tx.category} • {(tx as any).dateLabel}</p>
+                              <p className="text-[15px] font-bold text-foreground leading-tight italic">{tx.title}</p>
+                              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-wider opacity-60 mt-0.5">{tx.category} • {(tx as any).dateLabel}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <p className={cn("callout font-semibold", tx.type === 'in' ? "text-green-500" : "text-foreground")}>
+                          <p className={cn("text-[16px] font-black italic", tx.type === 'in' ? "text-green-500" : "text-foreground")}>
                               {tx.type === 'in' ? '+' : ''}₦{tx.amount.toLocaleString()}
                           </p>
-                          <ChevronRight size={16} className="text-muted-foreground/50" />
+                          <ChevronRight size={16} className="text-muted-foreground/30" />
                         </div>
                     </button>
                   ))
-                ) : searchQuery ? (
-                  <EmptyState 
-                    icon={SearchX}
-                    title="No Results"
-                    description={`We couldn't find any transaction matching "${searchQuery}"`}
-                  />
                 ) : (
                   <EmptyState 
                     icon={Clock}
-                    title="Immutable Ledger"
-                    description="Your financial journey starts now. Fund your wallet to start making secure instant payments."
-                    actionLabel="Fund Wallet"
-                    onAction={() => onNavigate('topup')}
+                    title="Ledger Empty"
+                    description="Your financial architecture is waiting for its first transaction node."
                   />
                 )}
             </div>
           </div>
         )}
 
-        <div className="ios-list-group bg-blue-50 dark:bg-blue-900/20 p-5 flex items-center gap-4">
-          <ShieldCheck className="text-blue-500" size={24} strokeWidth={1.5} />
-          <p className="footnote text-blue-800 dark:text-blue-300">
-            Protected by TitanShield™ bank-grade encryption.
-          </p>
+        {/* Global Security Node Footer */}
+        <div className="glass-card rounded-[24px] p-5 flex items-center gap-4 bg-indigo-500/5 dark:bg-indigo-500/10 border-indigo-500/10">
+          <div className="titan-pulse w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-500">
+             <ShieldCheck size={24} strokeWidth={1.5} />
+          </div>
+          <div className="flex-1">
+             <p className="text-[13px] font-black text-foreground italic uppercase tracking-tight">TitanShield™ Active</p>
+             <p className="text-[11px] font-medium text-muted-foreground">Quantum-safe encryption verified across 124 global nodes.</p>
+          </div>
         </div>
+
+        {/* The Mission Node */}
+        <button 
+           onClick={() => onNavigate('mission')}
+           className="w-full py-4 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-indigo-500 transition-colors duration-300"
+        >
+           Democratizing the Future of Wealth.
+        </button>
       </div>
     </div>
   );
